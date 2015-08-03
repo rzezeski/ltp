@@ -122,5 +122,11 @@ functional/mqueues/mqueues_send_rev_2
 #
 # lx brand does not have proc_priocntl privilege
 #
+functional/threads/pi_test/pi_test_pitest-1
+functional/threads/pi_test/pi_test_pitest-2
+functional/threads/pi_test/pi_test_pitest-3
+functional/threads/pi_test/pi_test_pitest-4
+functional/threads/pi_test/pi_test_pitest-5
+functional/threads/pi_test/pi_test_pitest-6
 functional/threads/schedule/schedule_1-1
 functional/threads/schedule/schedule_1-2
