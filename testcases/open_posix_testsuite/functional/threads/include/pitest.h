@@ -12,6 +12,11 @@
 #include "test.h"
 
 #define PROTOCOL                PTHREAD_PRIO_INHERIT
+#define	MAX_TF_THREADS		6
+
+#define NUM_CPUS						\
+	((sysconf(_SC_NPROCESSORS_ONLN) > MAX_TF_THREADS) ?	\
+	    MAX_TF_THREADS : sysconf(_SC_NPROCESSORS_ONLN))
 
 static inline
 double seconds_read(void)

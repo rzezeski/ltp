@@ -229,7 +229,7 @@ void *thread_tb(void *arg)
 
 int main(int argc, char **argv)
 {
-	cpus = sysconf(_SC_NPROCESSORS_ONLN);
+	cpus = NUM_CPUS;
 	pthread_mutexattr_t mutex_attr;
 	pthread_attr_t threadattr;
 	pthread_t threads[cpus - 1], threadsample, threadtp, threadtl, threadtb;
@@ -240,7 +240,6 @@ int main(int argc, char **argv)
 
 	test_set_priority(pthread_self(), SCHED_FIFO, 6);
 	base_time = seconds_read();
-	cpus = sysconf(_SC_NPROCESSORS_ONLN);
 
 	/* Initialize a mutex with PTHREAD_PRIO_INHERIT protocol */
 	mutex_attr_init(&mutex_attr);

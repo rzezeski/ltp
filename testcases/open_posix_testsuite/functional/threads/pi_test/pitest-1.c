@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 	int rc;
 
 	test_set_priority(pthread_self(), SCHED_FIFO, 6);
-	cpus = sysconf(_SC_NPROCESSORS_ONLN);
+	cpus = NUM_CPUS;
 	base_time = seconds_read();
 
 	/* Initialize a mutex with PTHREAD_PRIO_INHERIT protocol */
