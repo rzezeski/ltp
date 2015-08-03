@@ -32,7 +32,7 @@ int test_set_priority(pthread_t pid, unsigned policy, unsigned prio)
 	struct sched_param sched_param;
 	memset(&sched_param, 0, sizeof(sched_param));
 	sched_param.sched_priority = prio;
-	if (pthread_setschedparam(pid, policy, &sched_param) == -1)
+	if (pthread_setschedparam(pid, policy, &sched_param) != 0)
 	{
 		EPRINTF("UNRESOLVED: Can't set policy to %d and prio to %d",
 		  	policy, prio);
