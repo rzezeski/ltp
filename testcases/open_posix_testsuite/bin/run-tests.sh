@@ -14,6 +14,22 @@ NUM_FAIL=0
 NUM_PASS=0
 NUM_TESTS=0
 
+#
+# Determine if a test should run by checking the optional ignore file.
+# Return 1 if the test is ignored and 0 otherwise.
+#
+should_run() {
+	test_name=$1
+
+	if [ -n "$PTS_IGNORE_FILE" ] && [ -e $PTS_IGNORE_FILE ]; then
+		if grep "$test_name" $PTS_IGNORE_FILE > /dev/null; then
+			return 1
+		fi
+	fi
+
+	return 0
+}
+
 run_test_loop() {
 
 	for t in $*; do
@@ -46,9 +62,12 @@ run_test() {
 
 	complog=$(basename $testname).log.$$
 
-	sh -c "$SCRIPT_DIR/t0 $TIMEOUT_VAL ./$1 $(cat ./$(echo "$1" | sed 's,\.[^\.]*,,').args 2>/dev/null)" > $complog 2>&1
-
-	ret_code=$?
+	if should_run $testname; then
+		sh -c "$SCRIPT_DIR/t0 $TIMEOUT_VAL ./$1 $(cat ./$(echo "$1" | sed 's,\.[^\.]*,,').args 2>/dev/null)" > $complog 2>&1
+		ret_code=$?
+	else
+		ret_code=6
+	fi
 
 	if [ "$ret_code" = "0" ]; then
 		echo "$testname: execution: PASS" >> "${LOGFILE}"
@@ -65,6 +84,11 @@ run_test() {
 			;;
 		5)
 			msg="UNTESTED"
+			;;
+		6)
+			msg="IGNORED"
+			# Treat ignored tests as passing
+			ret_code=0
 			;;
 		$TIMEOUT_RET)
 			msg="HUNG"
