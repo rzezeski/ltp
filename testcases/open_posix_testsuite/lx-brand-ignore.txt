@@ -118,12 +118,36 @@ conformance/interfaces/mq_unlink/mq_unlink_2-1
 conformance/interfaces/mq_unlink/mq_unlink_2-2
 functional/mqueues/mqueues_send_rev_1
 functional/mqueues/mqueues_send_rev_2
+stress/mqueues/mqueues_multi_send_rev_1
+tress/mqueues/mqueues_multi_send_rev_2
 
 #
 # lx brand does not have proc_priocntl privilege
 #
+conformance/interfaces/pthread_attr_setinheritsched/pthread_attr_setinheritsched_2-2
+conformance/interfaces/pthread_attr_setinheritsched/pthread_attr_setinheritsched_2-3
+conformance/interfaces/pthread_attr_setinheritsched/pthread_attr_setinheritsched_2-4
+conformance/interfaces/pthread_attr_setschedpolicy/pthread_attr_setschedpolicy_1-2
+conformance/interfaces/pthread_attr_setschedpolicy/pthread_attr_setschedpolicy_1-3
+conformance/interfaces/pthread_attr_setschedpolicy/pthread_attr_setschedpolicy_2-1
+conformance/interfaces/pthread_setschedprio/pthread_setschedprio_1-1
+conformance/interfaces/pthread_setschedparam/pthread_setschedparam_1-2
+conformance/interfaces/pthread_setschedparam/pthread_setschedparam_4-1
+conformance/interfaces/sched_setparam/sched_setparam_2-1
+conformance/interfaces/sched_setparam/sched_setparam_2-2
+conformance/interfaces/sched_setparam/sched_setparam_9-1
+conformance/interfaces/sched_setscheduler/sched_setscheduler_1-1
+conformance/interfaces/sched_setscheduler/sched_setscheduler_4-1
+conformance/interfaces/sched_setscheduler/sched_setscheduler_16-1
+conformance/interfaces/sched_setscheduler/sched_setscheduler_19-1
+conformance/interfaces/sched_setscheduler/sched_setscheduler_22-1
+conformance/interfaces/sched_setscheduler/sched_setscheduler_22-2
+conformance/interfaces/sched_yield/sched_yield_1-1
+conformance/interfaces/sem_post/sem_post_8-1
+conformance/interfaces/sigaction/sigaction_16-1
 functional/threads/condvar/condvar_pthread_cond_wait_1
 functional/threads/condvar/condvar_pthread_cond_wait_2
+functional/threads/pi_test/pi_test_pitest-1
 functional/threads/pi_test/pi_test_pitest-2
 functional/threads/pi_test/pi_test_pitest-3
 functional/threads/pi_test/pi_test_pitest-4
@@ -131,3 +155,63 @@ functional/threads/pi_test/pi_test_pitest-5
 functional/threads/pi_test/pi_test_pitest-6
 functional/threads/schedule/schedule_1-1
 functional/threads/schedule/schedule_1-2
+
+#
+# glibc doesn't support PTHREAD_SCOPE_PROCESS
+#
+conformance/interfaces/sched_setparam/sched_setparam_20-1
+conformance/interfaces/sched_setparam/sched_setparam_21-1
+conformance/interfaces/sched_setparam/sched_setparam_21-2
+conformance/interfaces/sched_setscheduler/sched_setscheduler_15-1
+conformance/interfaces/sched_setscheduler/sched_setscheduler_15-2
+
+#
+# _POSIX_SPORADIC_SERVER not available
+#
+conformance/interfaces/sched_setparam/sched_setparam_23-2
+conformance/interfaces/sched_setparam/sched_setparam_23-3
+conformance/interfaces/sched_setparam/sched_setparam_23-4
+conformance/interfaces/sched_setparam/sched_setparam_23-5
+conformance/interfaces/sched_setparam/sched_setparam_25-2
+conformance/interfaces/sched_setparam/sched_setparam_25-3
+conformance/interfaces/sched_setparam/sched_setparam_25-4
+conformance/interfaces/sched_setscheduler/sched_setscheduler_17-2
+conformance/interfaces/sched_setscheduler/sched_setscheduler_17-3
+conformance/interfaces/sched_setscheduler/sched_setscheduler_17-4
+conformance/interfaces/sched_setscheduler/sched_setscheduler_19-2
+conformance/interfaces/sched_setscheduler/sched_setscheduler_19-3
+conformance/interfaces/sched_setscheduler/sched_setscheduler_19-4
+
+#
+# No semaphore limit (_SC_SEM_NSEMS_MAX)
+#
+conformance/interfaces/sem_init/sem_init_7-1
+
+#
+# CLOCK_PROCESS_CPUTIME_ID/CLOCK_THREAD_CPUTIME_ID not supported
+#
+conformance/interfaces/timer_create/timer_create_10-1
+conformance/interfaces/timer_create/timer_create_11-1
+
+#
+# Multiple instances of the same signal are coalesced on sigwait().
+#
+conformance/interfaces/sigwait/sigwait_2-1
+
+#
+# Need sys_time privs
+#
+conformance/interfaces/clock_settime/clock_settime_1-1
+conformance/interfaces/clock_settime/clock_settime_4-1
+conformance/interfaces/clock_settime/clock_settime_4-2
+conformance/interfaces/clock_settime/clock_settime_5-1
+conformance/interfaces/clock_settime/clock_settime_5-2
+conformance/interfaces/clock_settime/clock_settime_7-1
+conformance/interfaces/clock_settime/clock_settime_7-2
+conformance/interfaces/clock_settime/clock_settime_8-1
+conformance/interfaces/clock_settime/clock_settime_20-1
+
+#
+# https://github.com/joyent/illumos-joyent/issues/66
+#
+conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_1-2.run-test
