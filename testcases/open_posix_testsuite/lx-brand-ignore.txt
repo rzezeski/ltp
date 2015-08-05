@@ -1,6 +1,7 @@
 #
 # POSIX message queues not implemented
 #
+conformance/interfaces/fork/fork_19-1
 conformance/interfaces/mq_close/mq_close_1-1
 conformance/interfaces/mq_close/mq_close_2-1
 conformance/interfaces/mq_close/mq_close_3-1
@@ -124,6 +125,8 @@ tress/mqueues/mqueues_multi_send_rev_2
 #
 # lx brand does not have proc_priocntl privilege
 #
+conformance/interfaces/fork/fork_17-1
+conformance/interfaces/fork/fork_17-2
 conformance/interfaces/pthread_attr_setinheritsched/pthread_attr_setinheritsched_2-2
 conformance/interfaces/pthread_attr_setinheritsched/pthread_attr_setinheritsched_2-3
 conformance/interfaces/pthread_attr_setinheritsched/pthread_attr_setinheritsched_2-4
@@ -190,6 +193,7 @@ conformance/interfaces/sem_init/sem_init_7-1
 #
 # CLOCK_PROCESS_CPUTIME_ID/CLOCK_THREAD_CPUTIME_ID not supported
 #
+conformance/interfaces/fork/fork_22-1
 conformance/interfaces/timer_create/timer_create_10-1
 conformance/interfaces/timer_create/timer_create_11-1
 
@@ -214,4 +218,69 @@ conformance/interfaces/clock_settime/clock_settime_20-1
 #
 # https://github.com/joyent/illumos-joyent/issues/66
 #
-conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_1-2.run-test
+conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_1-1
+conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_1-2
+conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_2-1
+conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_5-1
+conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_6-1
+
+#
+# Various AIO functions don't EINVAL on bogus struct aiocb.
+#
+# Faulty on lx brand, Linux on KVM, and illumos.
+#
+conformance/interfaces/aio_error/aio_error_3-1
+conformance/interfaces/aio_return/aio_return_4-1
+
+#
+# _SC_AIO_MAX == -1
+#
+conformance/interfaces/aio_read/aio_read_9-1
+conformance/interfaces/aio_write/aio_write_7-1
+
+#
+# PTS is a wasteland, these tests hard-coded to fail.
+#
+conformance/interfaces/aio_suspend/aio_suspend_5-1
+
+#
+# Tests that fail on lx brand and Linux but pass illumos.
+#
+conformance/interfaces/aio_return/aio_return_2-1
+conformance/interfaces/aio_return/aio_return_3-2
+
+#
+# Never hits expected memory limit
+#
+conformance/interfaces/mmap/mmap_24-1
+
+#
+# mmap() is supposed to return ENODEV for pipe but returns ENOSYS.
+# This is an illumos bug.
+#
+conformance/interfaces/mmap/mmap_23-1
+
+#
+# I'm not sure.
+#
+conformance/interfaces/mmap/mmap_18-1
+
+#
+# According to the spec "Memory access within the mapping but beyond
+# the current end of the underlying objects __may__ result in SIGBUS
+# signals being sent to the process". So I don't think it breaks POSIX
+# but it surely doesn't behave like Linux.
+#
+conformance/interfaces/mmap/mmap_11-2
+
+#
+# The test uses /proc/mounts to check for noatime but the lx-brand
+# does not indicate noatime even if the underlying zfs fs has atime
+# disabled.
+#
+conformance/interfaces/mmap/mmap_13-1
+
+#
+# Doesn't run on 64bit.
+#
+conformance/interfaces/mmap/mmap_31-1
