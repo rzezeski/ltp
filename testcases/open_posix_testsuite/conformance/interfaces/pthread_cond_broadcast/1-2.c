@@ -268,6 +268,7 @@ static void children_number(void)
 	int avail_number;
 	unsigned long per_process;
 	unsigned long min_stack;
+	unsigned long free_bytes;
 
 	min_stack = sysconf(_SC_THREAD_STACK_MIN);
 
@@ -275,11 +276,12 @@ static void children_number(void)
 	if (ret != 0)
 		UNRESOLVED(ret, "Failed to get system information.");
 
+	free_bytes = sysinformation.freeram * sysinformation.mem_unit;
 	per_process = min_stack * max_thread_children;
-	if (per_process > sysinformation.freeram)
+	if (per_process > free_bytes)
 		UNTESTED("Not enough memory.");
 
-	avail_number = sysinformation.freeram / per_process;
+	avail_number = free_bytes / per_process;
 
 	if (avail_number < 10)
 		UNTESTED("Not enough memory.");
