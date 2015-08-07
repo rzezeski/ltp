@@ -120,7 +120,7 @@ conformance/interfaces/mq_unlink/mq_unlink_2-2
 functional/mqueues/mqueues_send_rev_1
 functional/mqueues/mqueues_send_rev_2
 stress/mqueues/mqueues_multi_send_rev_1
-tress/mqueues/mqueues_multi_send_rev_2
+stress/mqueues/mqueues_multi_send_rev_2
 
 #
 # lx brand does not have proc_priocntl privilege
@@ -130,15 +130,22 @@ conformance/interfaces/fork/fork_17-2
 conformance/interfaces/pthread_attr_setinheritsched/pthread_attr_setinheritsched_2-2
 conformance/interfaces/pthread_attr_setinheritsched/pthread_attr_setinheritsched_2-3
 conformance/interfaces/pthread_attr_setinheritsched/pthread_attr_setinheritsched_2-4
+conformance/interfaces/pthread_attr_setschedparam/pthread_attr_setschedparam_1-3
+conformance/interfaces/pthread_attr_setschedparam/pthread_attr_setschedparam_1-4
 conformance/interfaces/pthread_attr_setschedpolicy/pthread_attr_setschedpolicy_1-2
 conformance/interfaces/pthread_attr_setschedpolicy/pthread_attr_setschedpolicy_1-3
 conformance/interfaces/pthread_attr_setschedpolicy/pthread_attr_setschedpolicy_2-1
+conformance/interfaces/pthread_cancel/pthread_cancel_3-1
+conformance/interfaces/pthread_getschedparam/pthread_getschedparam_1-2
+conformance/interfaces/pthread_getschedparam/pthread_getschedparam_1-3
 conformance/interfaces/pthread_setschedprio/pthread_setschedprio_1-1
+conformance/interfaces/pthread_setschedparam/pthread_setschedparam_1-1
 conformance/interfaces/pthread_setschedparam/pthread_setschedparam_1-2
 conformance/interfaces/pthread_setschedparam/pthread_setschedparam_4-1
 conformance/interfaces/sched_setparam/sched_setparam_2-1
 conformance/interfaces/sched_setparam/sched_setparam_2-2
 conformance/interfaces/sched_setparam/sched_setparam_9-1
+conformance/interfaces/sched_setparam/sched_setparam_23-6
 conformance/interfaces/sched_setscheduler/sched_setscheduler_1-1
 conformance/interfaces/sched_setscheduler/sched_setscheduler_4-1
 conformance/interfaces/sched_setscheduler/sched_setscheduler_16-1
@@ -171,6 +178,8 @@ conformance/interfaces/sched_setscheduler/sched_setscheduler_15-2
 #
 # _POSIX_SPORADIC_SERVER not available
 #
+conformance/interfaces/sched_get_priority_max/sched_get_priority_max_1-3
+conformance/interfaces/sched_get_priority_min/sched_get_priority_min_1-3
 conformance/interfaces/sched_setparam/sched_setparam_23-2
 conformance/interfaces/sched_setparam/sched_setparam_23-3
 conformance/interfaces/sched_setparam/sched_setparam_23-4
@@ -223,6 +232,7 @@ conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_1-2
 conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_2-1
 conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_5-1
 conformance/interfaces/clock_getcpuclockid/clock_getcpuclockid_6-1
+conformance/interfaces/pthread_create/pthread_create_11-1
 
 #
 # Various AIO functions don't EINVAL on bogus struct aiocb.
@@ -248,6 +258,15 @@ conformance/interfaces/aio_suspend/aio_suspend_5-1
 #
 conformance/interfaces/aio_return/aio_return_2-1
 conformance/interfaces/aio_return/aio_return_3-2
+conformance/interfaces/pthread_rwlock_rdlock/pthread_rwlock_rdlock_2-1
+conformance/interfaces/pthread_rwlock_rdlock/pthread_rwlock_rdlock_2-2
+
+#
+# Tests that fail everywhere: lx brand, Linux, and illumos.
+#
+conformance/interfaces/pthread_rwlock_unlock/pthread_rwlock_unlock_3-1
+conformance/interfaces/sched_getparam/sched_getparam_6-1
+conformance/interfaces/sched_getscheduler/sched_getscheduler_7-1
 
 #
 # Never hits expected memory limit
@@ -284,3 +303,26 @@ conformance/interfaces/mmap/mmap_13-1
 # Doesn't run on 64bit.
 #
 conformance/interfaces/mmap/mmap_31-1
+
+#
+# Bytes written past the end of the mmap object (but still in page)
+# are not written to disk but they do appear to persist in the page
+# when mmap'd by another pid. Perhaps this test is really testing an
+# implementation detail of Linux's VM system.
+#
+conformance/interfaces/mmap/mmap_11-4
+
+#
+# https://github.com/joyent/illumos-joyent/issues/62
+#
+conformance/interfaces/pthread_once/pthread_once_3-1
+
+#
+# https://github.com/joyent/illumos-joyent/issues/67
+#
+conformance/interfaces/sched_rr_get_interval/sched_rr_get_interval_2-1
+
+#
+# https://github.com/joyent/illumos-joyent/issues/70
+#
+conformance/interfaces/sigaltstack/sigaltstack_2-1
