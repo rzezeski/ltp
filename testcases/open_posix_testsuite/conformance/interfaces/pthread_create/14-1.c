@@ -98,7 +98,7 @@
 /***********************************    Real Test   *****************************************/
 /********************************************************************************************/
 
-char do_it = 1;
+volatile char do_it = 1;
 char woken = 0;
 unsigned long count_ope = 0;
 #ifdef WITH_SYNCHRO
@@ -347,6 +347,11 @@ int main(void)
 		do_it = 0;
 	}
 	while (do_it);
+
+#ifdef WITH_SYNCHRO
+	sem_post(&semsig1);
+	sem_post(&semsig2);
+#endif
 
 	if ((ret = pthread_join(th_sig1, NULL))) {
 		UNRESOLVED(ret, "Signal 1 sender thread join failed");

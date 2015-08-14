@@ -243,6 +243,11 @@ int main(void)
 		do_it2 = 0;
 	} while (do_it2);
 
+#ifdef WITH_SYNCHRO
+	sem_post(&semsig1);
+	sem_post(&semsig2);
+#endif
+
 	ret = pthread_join(th_sig1, NULL);
 	if (ret)
 		UNRESOLVED(ret, "Signal 1 sender thread join failed");
