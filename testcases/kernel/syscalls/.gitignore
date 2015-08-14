@@ -362,6 +362,7 @@
 /inotify/inotify03
 /inotify/inotify04
 /inotify/inotify05
+/inotify/inotify06
 /inotify_init/inotify_init1_01
 /inotify_init/inotify_init1_02
 /io_cancel/io_cancel01
@@ -400,6 +401,7 @@
 /ipc/msgrcv/msgrcv05
 /ipc/msgrcv/msgrcv06
 /ipc/msgrcv/msgrcv07
+/ipc/msgrcv/msgrcv08
 /ipc/msgsnd/msgsnd01
 /ipc/msgsnd/msgsnd02
 /ipc/msgsnd/msgsnd03
@@ -615,6 +617,7 @@
 /open/open11
 /open/open12
 /open/open12_child
+/open/open13
 /openat/openat01
 /openat/openat02
 /openat/openat02_child
@@ -1002,6 +1005,7 @@
 /umount/umount01
 /umount/umount02
 /umount/umount03
+/umount2/umount2_01
 /uname/uname01
 /uname/uname02
 /uname/uname03

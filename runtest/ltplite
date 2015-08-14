@@ -496,6 +496,7 @@ msgrcv04 msgrcv04
 msgrcv05 msgrcv05
 msgrcv06 msgrcv06
 msgrcv07 msgrcv07
+msgrcv08 msgrcv08
 
 msgsnd01 msgsnd01
 msgsnd02 msgsnd02
@@ -545,6 +546,7 @@ open09 open09
 open10 open10
 open11 open11
 open12 open12
+open13 open13
 
 mincore01 mincore01
 #mincore02 mincore02 currently hangs and does not exit correctly
@@ -964,6 +966,8 @@ unlink08 unlink08
 #umount01 umount01 -D /dev/...
 #umount02 umount02 -D /dev/...
 #umount03 umount03 -D /dev/...
+
+umount2_01 umount2_01
 
 ustat01 ustat01
 ustat02 ustat02
