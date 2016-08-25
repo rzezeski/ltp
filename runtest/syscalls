@@ -7,7 +7,6 @@ accept4_01 accept4_01
 access01 access01
 access02 access02
 access03 access03
-access04 access04
 access05 access05
 access06 access06
 
@@ -102,7 +101,6 @@ creat05 creat05
 creat06 creat06
 creat07 creat07
 creat08 creat08
-creat09 creat09
 
 dup01 dup01
 dup02 dup02
@@ -123,6 +121,12 @@ dup3_02 dup3_02
 
 epoll_create1_01 epoll_create1_01
 epoll01 epoll-ltp
+epoll_ctl01 epoll_ctl01
+epoll_ctl02 epoll_ctl02
+epoll_wait01 epoll_wait01
+epoll_wait02 epoll_wait02
+epoll_wait03 epoll_wait03
+epoll_pwait01 epoll_pwait01
 
 eventfd01 eventfd01
 
@@ -258,6 +262,12 @@ fcntl30 fcntl30
 fcntl30_64 fcntl30_64
 fcntl31 fcntl31
 fcntl31_64 fcntl31_64
+fcntl32 fcntl32
+fcntl32_64 fcntl32_64
+fcntl33 fcntl33
+fcntl33_64 fcntl33_64
+fcntl34 fcntl34
+fcntl34_64 fcntl34_64
 
 fdatasync01 fdatasync01
 fdatasync02 fdatasync02
@@ -298,7 +308,6 @@ fstat05_64 fstat05_64
 
 #fstatat64/newfstatat test cases
 fstatat01 fstatat01
-fstatat01_64 fstatat01_64
 
 fstatfs01 fstatfs01
 fstatfs01_64 fstatfs01_64
@@ -472,6 +481,10 @@ io_submit01 io_submit01
 
 keyctl01 keyctl01
 
+kcmp01 kcmp01
+kcmp02 kcmp02
+kcmp03 kcmp03
+
 kill01 kill01
 kill02 kill02
 kill03 kill03
@@ -492,6 +505,9 @@ lchown03  lchown03
 lchown02_16 lchown02_16
 lchown03_16 lchown03_16
 
+lgetxattr01 lgetxattr01
+lgetxattr02 lgetxattr02
+
 link01 symlink01 -T link01
 link02 link02
 link03 link03
@@ -506,6 +522,10 @@ linkat01 linkat01
 linkat02 linkat02
 
 listen01 listen01
+
+llistxattr01 llistxattr01
+llistxattr02 llistxattr02
+llistxattr03 llistxattr03
 
 llseek01 llseek01
 llseek02 llseek02
@@ -714,19 +734,20 @@ open10 open10
 open11 open11
 open12 open12
 open13 open13
+open14 open14
 
 #openat test cases
 openat01 openat01
 openat02 openat02
+openat03 openat03
 
 mincore01 mincore01
 mincore02 mincore02
 
 madvise01 madvise01
 madvise02 madvise02
-madvise03 madvise03
-madvise04 madvise04
 madvise05 madvise05
+madvise06 madvise06
 
 newuname01 newuname01
 
@@ -736,11 +757,8 @@ pause01 pause01
 pause02 pause02
 pause03 pause03
 
-#  The personality() system call is poorly documented
-#  and difficult to figure out how to use by looking
-#  at the different architecture specific kernel files.
-#personality01 personality01
-#personality02 personality02
+personality01 personality01
+personality02 personality02
 
 pipe01 pipe01
 pipe02 pipe02
@@ -772,6 +790,11 @@ pread02_64 pread02_64
 pread03 pread03
 pread03_64 pread03_64
 
+preadv01 preadv01
+preadv01_64 preadv01_64
+preadv02 preadv02
+preadv02_64 preadv02_64
+
 profil01 profil01
 
 process_vm_readv01 process_vm01 -r
@@ -802,6 +825,11 @@ pwrite04 pwrite04
 pwrite01_64 pwrite01_64
 pwrite02_64 pwrite02_64
 pwrite04_64 pwrite04_64
+
+pwritev01 pwritev01
+pwritev01_64 pwritev01_64
+pwritev02 pwritev02
+pwritev02_64 pwritev02_64
 
 quotactl01 quotactl01
 quotactl02 quotactl02
@@ -840,9 +868,13 @@ recv01 recv01
 recvfrom01 recvfrom01
 
 recvmsg01 recvmsg01
+recvmsg02 recvmsg02
 
 remap_file_pages01 remap_file_pages01
 remap_file_pages02 remap_file_pages02
+
+removexattr01 removexattr01
+removexattr02 removexattr02
 
 rename01 rename01
 rename01A symlink01 -T rename01
@@ -863,6 +895,12 @@ rename14 rename14
 #renameat test cases
 renameat01 renameat01
 
+renameat201 renameat201
+renameat202 renameat202 -i 10
+
+request_key01 request_key01
+request_key02 request_key02
+
 rmdir01 rmdir01
 rmdir02 rmdir02
 rmdir03 rmdir03
@@ -880,6 +918,7 @@ rt_sigsuspend01 rt_sigsuspend01
 
 sbrk01 sbrk01
 sbrk02 sbrk02
+sbrk03 sbrk03
 
 sched_get_priority_max01 sched_get_priority_max01
 sched_get_priority_max02 sched_get_priority_max02
@@ -906,11 +945,16 @@ sched_getscheduler02 sched_getscheduler02
 
 sched_setscheduler01 sched_setscheduler01
 sched_setscheduler02 sched_setscheduler02
+sched_setscheduler03 sched_setscheduler03
 
 sched_yield01 sched_yield01
 
 sched_setaffinity01 sched_setaffinity01
 sched_getaffinity01 sched_getaffinity01
+
+sched_setattr01 sched_setattr01
+sched_getattr01 sched_getattr01
+sched_getattr02 sched_getattr02
 
 select01 select01
 select02 select02
@@ -1131,6 +1175,7 @@ signal02 signal02
 signal03 signal03
 signal04 signal04
 signal05 signal05
+signal06 signal06
 
 signalfd01 signalfd01
 
@@ -1148,7 +1193,6 @@ sigsuspend01 sigsuspend01
 
 socket01 socket01
 socket02 socket02
-socket03 socket03
 
 socketcall01 socketcall01
 socketcall02 socketcall02
@@ -1161,7 +1205,7 @@ socketpair02 socketpair02
 sockioctl01 sockioctl01
 
 splice01 splice01
-splice02 seq 1 10000000 | splice02 splice02-temp
+splice02 seq 1 20000 | splice02 splice02-temp
 splice03 splice03
 
 tee01 tee01
@@ -1318,6 +1362,8 @@ umount02 umount02
 umount03 umount03
 
 umount2_01 umount2_01
+umount2_02 umount2_02
+umount2_03 umount2_03
 
 ustat01 ustat01
 ustat02 ustat02
@@ -1360,7 +1406,7 @@ waitpid06 waitpid06
 waitpid07 waitpid07
 waitpid08 waitpid08
 waitpid09 waitpid09
-waitpid10 waitpid10 5
+waitpid10 waitpid10
 waitpid11 waitpid11
 waitpid12 waitpid12
 waitpid13 waitpid13

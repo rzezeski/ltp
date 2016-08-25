@@ -122,7 +122,7 @@ static void setup(void)
 	for (i = 0; i < 43; i++)
 		strcat(loop_dir, "/test_eloop");
 
-	tst_mkfs(cleanup, device, fs_type, NULL);
+	tst_mkfs(cleanup, device, fs_type, NULL, NULL);
 	SAFE_MKDIR(cleanup, MNT_POINT, DIR_MODE);
 	if (mount(device, MNT_POINT, fs_type, MS_RDONLY, NULL) < 0) {
 		tst_brkm(TBROK | TERRNO, cleanup,
@@ -167,7 +167,7 @@ static void cleanup(void)
 		tst_resm(TWARN | TERRNO, "umount device:%s failed", device);
 
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 
 	tst_rmdir();
 }

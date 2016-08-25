@@ -32,10 +32,9 @@ static inline void clean_node(unsigned long *array)
 
 #define LENGTH			(3UL<<30)
 #define TESTMEM			(1UL<<30)
-#define OVERCOMMIT		1
-#define NORMAL			2
-#define MLOCK			3
-#define KSM			4
+#define NORMAL			1
+#define MLOCK			2
+#define KSM			3
 
 long overcommit;
 void oom(int testcase, int lite, int retcode, int allow_sigkill);
@@ -45,19 +44,14 @@ void testoom(int mempolicy, int lite, int retcode, int allow_sigkill);
 
 #define PATH_KSM		"/sys/kernel/mm/ksm/"
 
+void save_max_page_sharing(void);
+void restore_max_page_sharing(void);
 void test_ksm_merge_across_nodes(unsigned long nr_pages);
 
 /* THP */
 
 #define PATH_THP		"/sys/kernel/mm/transparent_hugepage/"
 #define PATH_KHPD		PATH_THP "khugepaged/"
-
-int opt_nr_children, opt_nr_thps;
-char *opt_nr_children_str, *opt_nr_thps_str;
-void test_transparent_hugepage(int nr_children, int nr_thps,
-			       int hg_aligned, int mempolicy);
-void check_thp_options(int *nr_children, int *nr_thps);
-void thp_usage(void);
 
 /* HUGETLB */
 
@@ -100,4 +94,6 @@ void setup(void);
 
 void update_shm_size(size_t *shm_size);
 
+/* MMAP */
+int range_is_mapped(void (*cleanup_fn) (void), unsigned long low, unsigned long high);
 #endif

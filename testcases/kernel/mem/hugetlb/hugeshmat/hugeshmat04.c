@@ -47,6 +47,7 @@
 
 #include "test.h"
 #include "mem.h"
+#include "hugetlb.h"
 
 #define SIZE	(1024 * 1024 * 1024)
 #define BOUNDARY (1024 * 1024 * 1024)
@@ -54,11 +55,9 @@
 char *TCID = "hugeshmat04";
 int TST_TOTAL = 3;
 
-static long huge_total;
 static long huge_free;
 static long huge_free2;
 static long hugepages;
-static long orig_hugepages;
 static long orig_shmmax, new_shmmax;
 
 static void shared_hugepage(void);
@@ -127,6 +126,7 @@ void setup(void)
 	long mem_total, hpage_size;
 
 	tst_require_root();
+	check_hugepage();
 
 	mem_total = read_meminfo("MemTotal:");
 	SAFE_FILE_SCANF(NULL, PATH_SHMMAX, "%ld", &orig_shmmax);
@@ -144,11 +144,6 @@ void setup(void)
 
 	hugepages = (orig_hugepages * hpage_size + SIZE) / hpage_size;
 	set_sys_tune("nr_hugepages", hugepages, 1);
-
-	huge_total = read_meminfo("HugePages_Total:");
-	if (huge_total != hugepages)
-		tst_brkm(TCONF, cleanup,
-			"Maybe huge pages not enough for test.");
 
 	TEST_PAUSE;
 }

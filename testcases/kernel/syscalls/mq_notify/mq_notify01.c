@@ -41,6 +41,7 @@
 #include <mqueue.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
 #include "../utils/include_j_h.h"
 
@@ -176,7 +177,7 @@ static int do_test(struct test_case *tc)
 	abs_timeout.tv_nsec = 0;
 
 	/*
-	 * When test ended with SIGTERM etc, mq discriptor is left remains.
+	 * When test ended with SIGTERM etc, mq descriptor is left remains.
 	 * So we delete it first.
 	 */
 	mq_unlink(QUEUE_NAME);

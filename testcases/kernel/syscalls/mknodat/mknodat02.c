@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <error.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -124,7 +123,7 @@ static void setup(void)
 	if (!device)
 		tst_brkm(TCONF, cleanup, "Failed to acquire device");
 
-	tst_mkfs(cleanup, device, fs_type, NULL);
+	tst_mkfs(cleanup, device, fs_type, NULL, NULL);
 
 	TEST_PAUSE;
 
@@ -182,7 +181,7 @@ static void cleanup(void)
 		tst_resm(TWARN | TERRNO, "umount device:%s failed", device);
 
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 
 	tst_rmdir();
 }

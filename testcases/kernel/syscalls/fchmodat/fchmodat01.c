@@ -37,12 +37,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <error.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <signal.h>
 #include "test.h"
+#include "safe_macros.h"
 #include "linux_syscall_numbers.h"
 
 #define TEST_CASES 6
@@ -51,15 +51,13 @@
 #endif
 void setup();
 void cleanup();
-void setup_every_copy();
 
 char *TCID = "fchmodat01";
 int TST_TOTAL = TEST_CASES;
-char pathname[256] = "";
-char testfile[256] = "";
-char testfile2[256] = "";
-char testfile3[256] = "";
-int dirfd, fd, ret;
+char pathname[256];
+char testfile[256];
+char testfile2[256];
+char testfile3[256];
 int fds[TEST_CASES];
 char *filenames[TEST_CASES];
 int expected_errno[TEST_CASES] = { 0, 0, ENOTDIR, EBADF, 0, 0 };
@@ -86,8 +84,6 @@ int main(int ac, char **av)
 	setup();
 
 	for (lc = 0; TEST_LOOPING(lc); lc++) {
-		setup_every_copy();
-
 		tst_count = 0;
 
 		for (i = 0; i < TST_TOTAL; i++) {
@@ -103,75 +99,54 @@ int main(int ac, char **av)
 					 TEST_ERRNO, strerror(TEST_ERRNO));
 			}
 		}
-
 	}
 
 	cleanup();
 	tst_exit();
 }
 
-void setup_every_copy(void)
+void setup(void)
 {
+	tst_sig(NOFORK, DEF_HANDLER, cleanup);
+
+	tst_tmpdir();
+
 	/* Initialize test dir and file names */
-	sprintf(pathname, "fchmodattestdir%d", getpid());
-	sprintf(testfile, "fchmodattestfile%d.txt", getpid());
-	sprintf(testfile2, "/tmp/fchmodattestfile%d.txt", getpid());
-	sprintf(testfile3, "fchmodattestdir%d/fchmodattestfile%d.txt", getpid(),
-		getpid());
+	char *abs_path = tst_get_tmpdir();
+	int p = getpid();
 
-	ret = mkdir(pathname, 0700);
-	if (ret < 0) {
-		perror("mkdir: ");
-		exit(-1);
-	}
+	sprintf(pathname, "fchmodattestdir%d", p);
+	sprintf(testfile, "fchmodattest%d.txt", p);
+	sprintf(testfile2, "%s/fchmodattest%d.txt", abs_path, p);
+	sprintf(testfile3, "fchmodattestdir%d/fchmodattest%d.txt", p, p);
 
-	dirfd = open(pathname, O_DIRECTORY);
-	if (dirfd < 0) {
-		perror("open: ");
-		exit(-1);
-	}
+	free(abs_path);
 
-	fd = open(testfile, O_CREAT | O_RDWR, 0600);
-	if (fd < 0) {
-		perror("open: ");
-		exit(-1);
-	}
+	SAFE_MKDIR(cleanup, pathname, 0700);
 
-	fd = open(testfile2, O_CREAT | O_RDWR, 0600);
-	if (fd < 0) {
-		perror("open: ");
-		exit(-1);
-	}
+	fds[0] = SAFE_OPEN(cleanup, pathname, O_DIRECTORY);
+	fds[1] = fds[4] = fds[0];
 
-	fd = open(testfile3, O_CREAT | O_RDWR, 0600);
-	if (fd < 0) {
-		perror("open: ");
-		exit(-1);
-	}
+	SAFE_FILE_PRINTF(cleanup, testfile, testfile);
+	SAFE_FILE_PRINTF(cleanup, testfile2, testfile2);
 
-	fds[0] = fds[1] = fds[4] = dirfd;
-	fds[2] = fd;
+	fds[2] = SAFE_OPEN(cleanup, testfile3, O_CREAT | O_RDWR, 0600);
 	fds[3] = 100;
 	fds[5] = AT_FDCWD;
 
 	filenames[0] = filenames[2] = filenames[3] = filenames[4] = testfile;
 	filenames[1] = testfile2;
 	filenames[5] = testfile3;
-}
-
-void setup(void)
-{
-
-	tst_sig(NOFORK, DEF_HANDLER, cleanup);
 
 	TEST_PAUSE;
 }
 
 void cleanup(void)
 {
-	close(fd);
-	unlink(testfile);
-	unlink(testfile2);
-	unlink(testfile3);
-	rmdir(pathname);
+	if (fds[0] > 0)
+		close(fds[0]);
+	if (fds[2] > 0)
+		close(fds[2]);
+
+	tst_rmdir();
 }

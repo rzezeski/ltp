@@ -83,7 +83,7 @@ static void setup(void)
 	if (!device)
 		tst_brkm(TCONF, cleanup, "Failed to obtain block device");
 
-	tst_mkfs(cleanup, device, fs_type, NULL);
+	tst_mkfs(cleanup, device, fs_type, NULL, NULL);
 
 	SAFE_MKDIR(cleanup, MNTPOINT, DIR_MODE);
 
@@ -93,7 +93,7 @@ static void setup(void)
 static void cleanup(void)
 {
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 
 	tst_rmdir();
 }

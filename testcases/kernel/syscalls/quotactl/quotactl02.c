@@ -207,7 +207,7 @@ static void setup(void)
 	if (!block_dev)
 		tst_brkm(TCONF, cleanup, "Failed to obtain block device");
 
-	tst_mkfs(cleanup, block_dev, "xfs", NULL);
+	tst_mkfs(cleanup, block_dev, "xfs", NULL, NULL);
 
 	if (mount(block_dev, mntpoint, "xfs", 0, "uquota") < 0)
 		tst_brkm(TFAIL | TERRNO, NULL, "mount(2) fail");
@@ -220,7 +220,7 @@ static void cleanup(void)
 		tst_resm(TWARN | TERRNO, "umount(2) failed");
 
 	if (block_dev)
-		tst_release_device(NULL, block_dev);
+		tst_release_device(block_dev);
 
 	tst_rmdir();
 }

@@ -4,10 +4,6 @@
 /lib6/asapi_01
 /lib6/asapi_02
 /lib6/asapi_03
-/lib6/asapi_04
-/lib6/asapi_05
-/lib6/asapi_06
-/lib6/asapi_07
 /lib6/getaddrinfo_01
 /lib6/in6_01
 /lib6/in6_02
@@ -17,13 +13,12 @@
 /multicast/mc_member/mc_member_test
 /multicast/mc_opts/mc_verify_opts
 /multicast/mc_opts/mc_verify_opts_error
-/nfs/nfs01/open_files
-/nfs/nfs04/nfs04_create_file
+/nfs/nfs_stress/nfs01_open_files
+/nfs/nfs_stress/nfs04_create_file
+/nfs/nfs_stress/nfs05_make_tree
 /nfs/nfs_fsstress/fsstress
 /nfs/nfslock01/nfs_flock
 /nfs/nfslock01/nfs_flock_dgen
-/nfs/nfslock01/nfs_flock_frk
-/nfs/nfsstress/make_tree
 /nfsv4/acl/acl1
 /nfsv4/locks/locktests
 /rpc/basic_tests/rpc01/rpc1
@@ -44,8 +39,6 @@
 /tcp_cmds/echo/createfile
 /tcp_cmds/echo/echoes
 /tcp_cmds/echo/echoes6
-/tcp_cmds/perf_lan/pingpong
-/tcp_cmds/perf_lan/pingpong6
 /tcp_cmds/sendfile/testsf_c
 /tcp_cmds/sendfile/testsf_c6
 /tcp_cmds/sendfile/testsf_s

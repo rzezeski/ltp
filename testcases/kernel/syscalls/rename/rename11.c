@@ -104,7 +104,7 @@ static void setup(void)
 	if (!device)
 		tst_brkm(TCONF, cleanup, "Failed to obtain block device");
 
-	tst_mkfs(cleanup, device, fs_type, NULL);
+	tst_mkfs(cleanup, device, fs_type, NULL, NULL);
 
 	SAFE_MKDIR(cleanup, MNTPOINT, 0755);
 	if (mount(device, MNTPOINT, fs_type, 0, NULL) < 0) {
@@ -189,7 +189,7 @@ static void cleanup(void)
 		tst_resm(TWARN | TERRNO, "umount device:%s failed", device);
 
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 
 	tst_rmdir();
 }

@@ -170,6 +170,8 @@ static void do_umount(void)
 
 static void setup(void)
 {
+	dev_t dev;
+
 	tst_sig(FORK, DEF_HANDLER, cleanup);
 
 	tst_require_root();
@@ -184,15 +186,17 @@ static void setup(void)
 	if (!device)
 		tst_brkm(TCONF, cleanup, "Failed to obtain block device");
 
-	tst_mkfs(cleanup, device, fs_type, NULL);
+	tst_mkfs(cleanup, device, fs_type, NULL, NULL);
 
 	SAFE_MKDIR(cleanup, mntpoint, DIR_MODE);
 
 	memset(path, 'a', PATH_MAX + 1);
 
-	if (mknod(char_dev, S_IFCHR | FILE_MODE, 0)) {
+	dev = makedev(1, 3);
+	if (mknod(char_dev, S_IFCHR | FILE_MODE, dev)) {
 		tst_brkm(TBROK | TERRNO, cleanup,
-		         "failed to mknod(char_dev, S_IFCHR | FILE_MODE, 0)");
+			 "failed to mknod(char_dev, S_IFCHR | FILE_MODE, %lu)",
+			 dev);
 	}
 
 	TEST_PAUSE;
@@ -201,7 +205,7 @@ static void setup(void)
 static void cleanup(void)
 {
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 
 	tst_rmdir();
 }

@@ -4,7 +4,6 @@
 /access/access01
 /access/access02
 /access/access03
-/access/access04
 /access/access05
 /access/access06
 /acct/acct01
@@ -80,7 +79,6 @@
 /creat/creat06
 /creat/creat07
 /creat/creat08
-/creat/creat09
 /creat/creat07_child
 /dup/dup01
 /dup/dup02
@@ -98,6 +96,12 @@
 /dup3/dup3_02
 /epoll/epoll-ltp
 /epoll_create1/epoll_create1_01
+/epoll_ctl/epoll_ctl01
+/epoll_ctl/epoll_ctl02
+/epoll_wait/epoll_wait01
+/epoll_wait/epoll_wait02
+/epoll_wait/epoll_wait03
+/epoll_pwait/epoll_pwait01
 /eventfd/eventfd01
 /eventfd2/eventfd2_01
 /eventfd2/eventfd2_02
@@ -221,6 +225,12 @@
 /fcntl/fcntl30_64
 /fcntl/fcntl31
 /fcntl/fcntl31_64
+/fcntl/fcntl32
+/fcntl/fcntl32_64
+/fcntl/fcntl33
+/fcntl/fcntl33_64
+/fcntl/fcntl34
+/fcntl/fcntl34_64
 /fdatasync/fdatasync01
 /fdatasync/fdatasync02
 /flock/flock01
@@ -254,7 +264,6 @@
 /fstat/fstat05
 /fstat/fstat05_64
 /fstatat/fstatat01
-/fstatat/fstatat01_64
 /fstatfs/fstatfs01
 /fstatfs/fstatfs01_64
 /fstatfs/fstatfs02
@@ -440,6 +449,9 @@
 /ipc/shmget/shmget04
 /ipc/shmget/shmget05
 /keyctl/keyctl01
+/kcmp/kcmp01
+/kcmp/kcmp02
+/kcmp/kcmp03
 /kill/kill01
 /kill/kill02
 /kill/kill03
@@ -458,6 +470,8 @@
 /lchown/lchown02_16
 /lchown/lchown03
 /lchown/lchown03_16
+/lgetxattr/lgetxattr01
+/lgetxattr/lgetxattr02
 /link/link02
 /link/link03
 /link/link04
@@ -468,6 +482,9 @@
 /linkat/linkat01
 /linkat/linkat02
 /listen/listen01
+/llistxattr/llistxattr01
+/llistxattr/llistxattr02
+/llistxattr/llistxattr03
 /llseek/llseek01
 /llseek/llseek02
 /llseek/llseek03
@@ -492,6 +509,7 @@
 /madvise/madvise03
 /madvise/madvise04
 /madvise/madvise05
+/madvise/madvise06
 /mallopt/mallopt01
 /mbind/mbind01
 /memcmp/memcmp01
@@ -618,9 +636,11 @@
 /open/open12
 /open/open12_child
 /open/open13
+/open/open14
 /openat/openat01
 /openat/openat02
 /openat/openat02_child
+/openat/openat03
 /pathconf/pathconf01
 /pause/pause01
 /pause/pause02
@@ -651,6 +671,10 @@
 /pread/pread02_64
 /pread/pread03
 /pread/pread03_64
+/preadv/preadv01
+/preadv/preadv01_64
+/preadv/preadv02
+/preadv/preadv02_64
 /profil/profil01
 /pselect/pselect01
 /pselect/pselect01_64
@@ -670,6 +694,10 @@
 /pwrite/pwrite02_64
 /pwrite/pwrite04
 /pwrite/pwrite04_64
+/pwritev/pwritev01
+/pwritev/pwritev01_64
+/pwritev/pwritev02
+/pwritev/pwritev02_64
 /quotactl/quotactl01
 /quotactl/quotactl02
 /read/read01
@@ -696,8 +724,11 @@
 /recv/recv01
 /recvfrom/recvfrom01
 /recvmsg/recvmsg01
+/recvmsg/recvmsg02
 /remap_file_pages/remap_file_pages01
 /remap_file_pages/remap_file_pages02
+/removexattr/removexattr01
+/removexattr/removexattr02
 /rename/rename01
 /rename/rename02
 /rename/rename03
@@ -713,6 +744,10 @@
 /rename/rename13
 /rename/rename14
 /renameat/renameat01
+/renameat2/renameat201
+/renameat2/renameat202
+/request_key/request_key01
+/request_key/request_key02
 /rmdir/rmdir01
 /rmdir/rmdir02
 /rmdir/rmdir03
@@ -728,11 +763,14 @@
 /rt_sigtimedwait/rt_sigtimedwait01
 /sbrk/sbrk01
 /sbrk/sbrk02
+/sbrk/sbrk03
 /sched_get_priority_max/sched_get_priority_max01
 /sched_get_priority_max/sched_get_priority_max02
 /sched_get_priority_min/sched_get_priority_min01
 /sched_get_priority_min/sched_get_priority_min02
 /sched_getaffinity/sched_getaffinity01
+/sched_getattr/sched_getattr01
+/sched_getattr/sched_getattr02
 /sched_getparam/sched_getparam01
 /sched_getparam/sched_getparam02
 /sched_getparam/sched_getparam03
@@ -742,6 +780,7 @@
 /sched_rr_get_interval/sched_rr_get_interval02
 /sched_rr_get_interval/sched_rr_get_interval03
 /sched_setaffinity/sched_setaffinity01
+/sched_setattr/sched_setattr01
 /sched_setparam/sched_setparam01
 /sched_setparam/sched_setparam02
 /sched_setparam/sched_setparam03
@@ -749,6 +788,7 @@
 /sched_setparam/sched_setparam05
 /sched_setscheduler/sched_setscheduler01
 /sched_setscheduler/sched_setscheduler02
+/sched_setscheduler/sched_setscheduler03
 /sched_yield/sched_yield01
 /select/select01
 /select/select02
@@ -899,6 +939,7 @@
 /signal/signal03
 /signal/signal04
 /signal/signal05
+/signal/signal06
 /signalfd/signalfd01
 /signalfd4/signalfd4_01
 /signalfd4/signalfd4_02
@@ -911,7 +952,6 @@
 /sigwaitinfo/sigwaitinfo01
 /socket/socket01
 /socket/socket02
-/socket/socket03
 /socketcall/socketcall01
 /socketcall/socketcall02
 /socketcall/socketcall03
@@ -1006,6 +1046,8 @@
 /umount/umount02
 /umount/umount03
 /umount2/umount2_01
+/umount2/umount2_02
+/umount2/umount2_03
 /uname/uname01
 /uname/uname02
 /uname/uname03

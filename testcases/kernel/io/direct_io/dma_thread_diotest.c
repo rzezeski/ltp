@@ -104,7 +104,6 @@
 
 #include "test.h"
 #include "safe_macros.h"
-#include "tst_fs_type.h"
 
 #define FILESIZE	(12*1024*1024)
 #define READSIZE	(1024*1024)
@@ -114,10 +113,10 @@
 #define DIR_MODE	(S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP| \
 			 S_IXGRP|S_IROTH|S_IXOTH)
 #define FILECOUNT	100
-#define MIN_WORKERS	2
-#define MAX_WORKERS	256
 #define PATTERN		(0xfa)
 #define PAGE_SIZE	getpagesize()
+#define MIN_WORKERS	2
+#define MAX_WORKERS	(READSIZE/PAGE_SIZE)
 
 char *TCID = "dma_thread_diotest";
 int TST_TOTAL = 1;
@@ -230,6 +229,8 @@ int main(int argc, char *argv[])
 	int i, lc;
 
 	workers = sysconf(_SC_NPROCESSORS_ONLN);
+	if (workers > MAX_WORKERS)
+		workers = MAX_WORKERS;
 	tst_parse_opts(argc, argv, options, help);
 
 	setup();
@@ -397,7 +398,7 @@ static void setup(void)
 			tst_brkm(TCONF, NULL,
 				 "you must specify a big blockdevice(>1.3G)");
 		} else {
-			tst_mkfs(NULL, device, "ext3", NULL);
+			tst_mkfs(NULL, device, "ext3", NULL, NULL);
 		}
 
 		if (mount(device, MNT_POINT, "ext3", 0, NULL) < 0) {
@@ -440,6 +441,6 @@ static void cleanup(void)
 static void help(void)
 {
 	printf("-a align read buffer to offset <alignment>.\n");
-	printf("-w number of worker threads, 2 (default) to 256,"
-	       " defaults to number of cores.\n");
+	printf("-w number of worker threads, 2 (default) to %d,"
+	       " defaults to number of cores.\n", MAX_WORKERS);
 }

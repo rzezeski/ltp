@@ -29,8 +29,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include "test.h"
 #include "userns_helper.h"
+#include "test.h"
 
 char *TCID = "user_namespace5";
 int TST_TOTAL = 1;
@@ -49,18 +49,18 @@ static int child_fn1(void)
 	return 0;
 }
 
-static long getusernsidbypid(int pid)
+static unsigned int getusernsidbypid(int pid)
 {
 	char path[BUFSIZ];
 	char userid[BUFSIZ];
-	long id = 0;
+	unsigned int id = 0;
 
 	sprintf(path, "/proc/%d/ns/user", pid);
 
 	if (readlink(path, userid, BUFSIZ) == -1)
 		tst_resm(TFAIL | TERRNO, "readlink failure.");
 
-	if (sscanf(userid, "user:[%ld]", &id) != 1)
+	if (sscanf(userid, "user:[%u]", &id) != 1)
 		tst_resm(TFAIL, "sscanf failure.");
 	return id;
 }
@@ -68,7 +68,7 @@ static long getusernsidbypid(int pid)
 static void test_userns_id(void)
 {
 	int cpid1, cpid2, cpid3;
-	long parentuserns, cpid1userns, cpid2userns, newparentuserns;
+	unsigned int parentuserns, cpid1userns, cpid2userns, newparentuserns;
 
 	parentuserns = getusernsidbypid(getpid());
 	cpid1 = ltp_clone_quick(SIGCHLD, (void *)child_fn1,

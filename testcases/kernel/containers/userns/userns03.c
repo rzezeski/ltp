@@ -47,9 +47,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include "test.h"
-#include "libclone.h"
 #include "userns_helper.h"
+#include "test.h"
 
 #define CHILD1UID 0
 #define CHILD1GID 0
@@ -61,7 +60,6 @@
 char *TCID = "user_namespace3";
 int TST_TOTAL = 1;
 static int cpid1, parentuid, parentgid;
-static bool setgroupstag = true;
 
 /*
  * child_fn1() - Inside a new user namespace
@@ -158,8 +156,6 @@ static void setup(void)
 	check_newuser();
 	tst_tmpdir();
 	TST_CHECKPOINT_INIT(NULL);
-	if (access("/proc/self/setgroups", F_OK) == 0)
-		setgroupstag = false;
 }
 
 int main(int argc, char *argv[])
@@ -168,6 +164,7 @@ int main(int argc, char *argv[])
 	char path[BUFSIZ];
 	int lc;
 	int fd;
+	int ret;
 
 	tst_parse_opts(argc, argv, NULL, NULL);
 	setup();
@@ -190,11 +187,31 @@ int main(int argc, char *argv[])
 			tst_brkm(TBROK | TERRNO, cleanup,
 				"cpid2 clone failed");
 
-		if (setgroupstag == false) {
+		if (access("/proc/self/setgroups", F_OK) == 0) {
 			sprintf(path, "/proc/%d/setgroups", cpid1);
 			fd = SAFE_OPEN(cleanup, path, O_WRONLY, 0644);
 			SAFE_WRITE(cleanup, 1, fd, "deny", 4);
 			SAFE_CLOSE(cleanup, fd);
+			/* If the setgroups file has the value "deny",
+			 * then the setgroups(2) system call can't
+			 * subsequently be reenabled (by writing "allow" to
+			 * the file) in this user namespace.  (Attempts to
+			 * do so will fail with the error EPERM.)
+			*/
+
+			/* test that setgroups can't be re-enabled */
+			fd = SAFE_OPEN(cleanup, path, O_WRONLY, 0644);
+			ret = write(fd, "allow", 5);
+
+			if (ret != -1) {
+				tst_brkm(TBROK | TERRNO, cleanup,
+					"write action should fail");
+			} else if (errno != EPERM) {
+				tst_brkm(TBROK | TERRNO, cleanup,
+					"unexpected error: \n");
+			}
+			SAFE_CLOSE(cleanup, fd);
+			tst_resm(TPASS, "setgroups can't be re-enabled");
 
 			sprintf(path, "/proc/%d/setgroups", cpid2);
 			fd = SAFE_OPEN(cleanup, path, O_WRONLY, 0644);
@@ -205,8 +222,8 @@ int main(int argc, char *argv[])
 		updatemap(cpid1, UID_MAP, CHILD1UID, parentuid, cleanup);
 		updatemap(cpid2, UID_MAP, CHILD2UID, parentuid, cleanup);
 
-		updatemap(cpid1, GID_MAP, CHILD1GID, parentuid, cleanup);
-		updatemap(cpid2, GID_MAP, CHILD2GID, parentuid, cleanup);
+		updatemap(cpid1, GID_MAP, CHILD1GID, parentgid, cleanup);
+		updatemap(cpid2, GID_MAP, CHILD2GID, parentgid, cleanup);
 
 		TST_SAFE_CHECKPOINT_WAKE_AND_WAIT(cleanup, 1);
 

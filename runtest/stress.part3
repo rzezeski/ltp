@@ -6,7 +6,6 @@ accept01 accept01
 access01 access01
 access02 access02
 access03 access03
-access04 access04
 access05 access05
 access06 access06
 
@@ -85,7 +84,6 @@ creat05 creat05
 creat06 creat06
 creat07 creat07
 creat08 creat08
-creat09 creat09
 
 dup01 dup01
 dup02 dup02
@@ -100,6 +98,15 @@ dup202 dup202
 dup203 dup203
 dup204 dup204
 dup205 dup205
+
+epoll_ctl01 epoll_ctl01
+epoll_ctl02 epoll_ctl02
+
+epoll_wait01 epoll_wait01
+epoll_wait02 epoll_wait02
+epoll_wait03 epoll_wait03
+
+epoll_pwait01 epoll_pwait01
 
 execl01 execl01
 execle01 execle01
@@ -164,6 +171,8 @@ fcntl26 fcntl26
 fcntl29 fcntl29
 fcntl30 fcntl30
 fcntl31 fcntl31
+fcntl32 fcntl32
+fcntl33 fcntl33
 
 fdatasync01 fdatasync01
 fdatasync02 fdatasync02
@@ -496,6 +505,9 @@ pread01 pread01
 pread02 pread02
 pread03 pread03
 
+preadv01 preadv01
+preadv02 preadv02
+
 profil01 profil01
 
 pselect01 pselect01
@@ -512,6 +524,9 @@ pwrite04 pwrite04
 pwrite01_64 pwrite01_64
 pwrite02_64 pwrite02_64
 pwrite04_64 pwrite04_64
+
+pwritev01 pwritev01
+pwritev02 pwritev02
 
 read01 read01
 read02 read02
@@ -742,6 +757,7 @@ signal02 signal02
 signal03 signal03
 signal04 signal04
 signal05 signal05
+signal06 signal06
 
 sigpending02 sigpending02
 
@@ -875,7 +891,7 @@ waitpid06 waitpid06
 waitpid07 waitpid07
 waitpid08 waitpid08
 waitpid09 waitpid09
-waitpid10 waitpid10 5
+waitpid10 waitpid10
 waitpid11 waitpid11
 waitpid12 waitpid12
 waitpid13 waitpid13
@@ -899,5 +915,3 @@ hangup01 hangup01
 mc_cmds mc_cmds
 mc_opts export TCsrc=$LTPROOT/testcases/network/multicast/mc_opts; mc_opts
 rpc01 rpc01
-perf_lan perf_lan
-

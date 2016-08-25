@@ -23,7 +23,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <error.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -171,7 +170,7 @@ static void setup(void)
 	SAFE_MKDIR(cleanup, "./tmp", DIR_MODE);
 	SAFE_TOUCH(cleanup, TEST_EACCES, 0666, NULL);
 
-	tst_mkfs(cleanup, device, fs_type, NULL);
+	tst_mkfs(cleanup, device, fs_type, NULL, NULL);
 	SAFE_MKDIR(cleanup, "mntpoint", DIR_MODE);
 
 	if (mount(device, "mntpoint", fs_type, 0, NULL) < 0) {
@@ -209,7 +208,7 @@ static void cleanup(void)
 		tst_resm(TWARN | TERRNO, "umount device:%s failed", device);
 
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 
 	tst_rmdir();
 }

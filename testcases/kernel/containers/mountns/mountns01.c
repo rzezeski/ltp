@@ -40,20 +40,16 @@
 #include <sys/mount.h>
 #include <stdio.h>
 #include <errno.h>
-#include "test.h"
-#include "libclone.h"
-#include "safe_macros.h"
-#include "safe_file_ops.h"
 #include "mountns_helper.h"
-
+#include "test.h"
+#include "safe_macros.h"
 
 char *TCID	= "mountns01";
 int TST_TOTAL	= 2;
 
-
 #if defined(MS_SHARED) && defined(MS_PRIVATE) && defined(MS_REC)
 
-int child_func(void *arg)
+int child_func(void *arg LTP_ATTRIBUTE_UNUSED)
 {
 	int ret = 0;
 

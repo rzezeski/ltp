@@ -324,4 +324,8 @@ setgid 214
 setfsuid 215
 setfsgid 216
 newfstatat 293
+kcmp 343
+sched_setattr 345
+sched_getattr 346
+renameat2 347
 getrandom 349

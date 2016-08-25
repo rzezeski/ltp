@@ -31,7 +31,7 @@ static const char *dev;
 static void cleanup(void)
 {
 	if (dev)
-		tst_release_device(NULL, dev);
+		tst_release_device(dev);
 
 	tst_rmdir();
 }
@@ -46,7 +46,7 @@ int main(void)
 
 	printf("Test device='%s'\n", dev);
 
-	tst_mkfs(cleanup, dev, "ext2", NULL);
+	tst_mkfs(cleanup, dev, "ext2", NULL, NULL);
 
 	cleanup();
 	tst_exit();

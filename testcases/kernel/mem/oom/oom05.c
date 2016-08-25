@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 		 * is in charge of cpuset.memory_migrate, we can write
 		 * 1 to cpuset.memory_migrate to enable the migration.
 		 */
-		if (is_numa(cleanup)) {
+		if (is_numa(cleanup, NH_MEMS, 2)) {
 			write_cpuset_files(CPATH_NEW, "memory_migrate", "1");
 			tst_resm(TINFO, "OOM on CPUSET & MEMCG with "
 					"cpuset.memory_migrate=1");
@@ -110,6 +110,9 @@ void setup(void)
 	tst_sig(FORK, DEF_HANDLER, cleanup);
 	TEST_PAUSE;
 
+	if (!is_numa(NULL, NH_MEMS, 1))
+		tst_brkm(TCONF, NULL, "requires NUMA with at least 1 node");
+
 	overcommit = get_sys_tune("overcommit_memory");
 	set_sys_tune("overcommit_memory", 1, 1);
 
@@ -125,7 +128,7 @@ void setup(void)
 	 */
 	ret = get_allowed_nodes(NH_MEMS, 1, &memnode);
 	if (ret < 0)
-		tst_brkm(TBROK, NULL, "Failed to get a memory node "
+		tst_brkm(TBROK, cleanup, "Failed to get a memory node "
 				      "using get_allowed_nodes()");
 	write_cpusets(memnode);
 }

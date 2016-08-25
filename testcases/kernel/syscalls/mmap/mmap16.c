@@ -48,6 +48,7 @@ static const char *device;
 static const char *fs_type = "ext4";
 static int mount_flag;
 static int chdir_flag;
+static int parentfd = -1;
 
 static int page_size;
 static int bug_reproduced;
@@ -91,7 +92,7 @@ int main(int ac, char **av)
 
 static void do_test(void)
 {
-	int fd, ret, status;
+	int ret, status;
 	pid_t child;
 	char buf[FS_BLOCKSIZE];
 
@@ -105,12 +106,12 @@ static void do_test(void)
 	case 0:
 		do_child();
 	default:
-		fd = SAFE_OPEN(cleanup, "testfilep", O_RDWR);
+		parentfd = SAFE_OPEN(cleanup, "testfilep", O_RDWR);
 		memset(buf, 'a', FS_BLOCKSIZE);
 
 		TST_SAFE_CHECKPOINT_WAIT(cleanup, 0);
 		while (1) {
-			ret = write(fd, buf, FS_BLOCKSIZE);
+			ret = write(parentfd, buf, FS_BLOCKSIZE);
 			if (ret < 0) {
 				if (errno == ENOSPC) {
 					break;
@@ -120,7 +121,7 @@ static void do_test(void)
 				}
 			}
 		}
-		SAFE_CLOSE(cleanup, fd);
+		SAFE_CLOSE(cleanup, parentfd);
 		TST_SAFE_CHECKPOINT_WAKE(cleanup, 0);
 	}
 
@@ -158,7 +159,7 @@ static void setup(void)
 	device = tst_acquire_device(cleanup);
 	if (!device)
 		tst_brkm(TCONF, cleanup, "Failed to obtain block device");
-	tst_mkfs(cleanup, device, fs_type, fs_opts);
+	tst_mkfs(cleanup, device, fs_type, fs_opts, "10240");
 
 	SAFE_MKDIR(cleanup, MNTPOINT, 0755);
 	/*
@@ -231,11 +232,13 @@ static void do_child(void)
 
 static void cleanup(void)
 {
+	if (parentfd >= 0)
+		close(parentfd);
 	if (chdir_flag && chdir(".."))
 		tst_resm(TWARN | TERRNO, "chdir('..') failed");
 	if (mount_flag && tst_umount(MNTPOINT) < 0)
 		tst_resm(TWARN | TERRNO, "umount device:%s failed", device);
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 	tst_rmdir();
 }

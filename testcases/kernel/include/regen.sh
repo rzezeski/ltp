@@ -32,6 +32,7 @@ cat << EOF > "${output_pid}"
 
 #include <errno.h>
 #include <sys/syscall.h>
+#include <asm/unistd.h>
 #include "cleanup.c"
 
 #define ltp_syscall(NR, ...) ({ \\
@@ -44,10 +45,24 @@ cat << EOF > "${output_pid}"
 	} \\
 	if (__ret == -1 && errno == ENOSYS) { \\
 		tst_brkm(TCONF, CLEANUP, \\
-			"syscall " #NR " not supported on your arch"); \\
-		errno = ENOSYS; \\
+			"syscall(%d) " #NR " not supported on your arch", \\
+			NR); \\
 	} \\
 	__ret; \\
+})
+
+#define tst_syscall(NR, ...) ({ \\
+	int tst_ret; \\
+	if (NR == __LTP__NR_INVALID_SYSCALL) { \\
+		errno = ENOSYS; \\
+		tst_ret = -1; \\
+	} else { \\
+		tst_ret = syscall(NR, ##__VA_ARGS__); \\
+	} \\
+	if (tst_ret == -1 && errno == ENOSYS) { \\
+		tst_brk(TCONF, "syscall(%d) " #NR "not supported", NR); \\
+	} \\
+	tst_ret; \\
 })
 
 EOF
@@ -71,11 +86,9 @@ for arch in $(cat "${srcdir}/order") ; do
 		if [ $# -eq 0 ] ; then
 			err "invalid line found: $line"
 		fi
-		cat <<-EOF
-		# ifndef ${nr}
-		#  define ${nr} $*
-		# endif
-		EOF
+		echo "# ifndef ${nr}"
+		echo "#  define ${nr} $*"
+		echo "# endif"
 	done < "${srcdir}/${arch}.in"
 	echo "#endif"
 	echo
@@ -97,11 +110,9 @@ echo "/* Common stubs */"
 echo "#define __LTP__NR_INVALID_SYSCALL -1" >> "${output_pid}"
 for nr in $(awk '{print $1}' "${srcdir}/"*.in | sort -u) ; do
 	nr="__NR_${nr}"
-	cat <<-EOF
-	# ifndef ${nr}
-	#  define ${nr} __LTP__NR_INVALID_SYSCALL
-	# endif
-	EOF
+	echo "# ifndef ${nr}"
+	echo "#  define ${nr} __LTP__NR_INVALID_SYSCALL"
+	echo "# endif"
 done
 echo "#endif"
 ) >> "${output_pid}._footer"

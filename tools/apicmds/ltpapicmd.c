@@ -116,6 +116,13 @@ int ident_ttype(char *tstype)
 		return -1;
 }
 
+void tst_cat_file(const char *filename)
+{
+	const char *cmd[] = {"cat", filename, NULL};
+
+	tst_run_cmd(NULL, cmd, NULL, NULL, 0);
+}
+
 void apicmd_brk(int argc, char *argv[])
 {
 	int trestype;
@@ -133,8 +140,10 @@ void apicmd_brk(int argc, char *argv[])
 	}
 	trestype = ident_ttype((argv++)[0]);
 	file_name = (argv++)[0];
+	tst_cat_file(file_name);
 	argv++;
-	tst_brk(trestype, file_name, NULL, "%s", *argv);
+	tst_brkm(trestype, NULL, "%s", *argv);
+
 }
 
 void apicmd_res(int argc, char *argv[])
@@ -153,7 +162,8 @@ void apicmd_res(int argc, char *argv[])
 	}
 	trestype = ident_ttype((argv++)[0]);
 	file_name = (argv++)[0];
-	tst_res(trestype, file_name, "%s", *argv);
+	tst_cat_file(file_name);
+	tst_resm(trestype, "%s", *argv);
 }
 
 void apicmd_brkm(int argc, char *argv[])

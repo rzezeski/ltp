@@ -42,7 +42,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <fcntl.h>
-#include <error.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -183,7 +182,7 @@ static void setup(void)
 	for (i = 0; i < 43; i++)
 		strcat(looppathname, TESTDIR2);
 
-	tst_mkfs(cleanup, device, fs_type, NULL);
+	tst_mkfs(cleanup, device, fs_type, NULL, NULL);
 	SAFE_MKDIR(cleanup, MNTPOINT, DIRMODE);
 	if (mount(device, MNTPOINT, fs_type, 0, NULL) < 0) {
 		tst_brkm(TBROK | TERRNO, cleanup,
@@ -254,7 +253,7 @@ static void cleanup(void)
 		tst_resm(TWARN | TERRNO, "umount %s failed", MNTPOINT);
 
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 
 	tst_rmdir();
 }

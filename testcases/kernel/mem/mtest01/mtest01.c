@@ -50,11 +50,27 @@
 
 char *TCID = "mtest01";
 int TST_TOTAL = 1;
-int pid_count = 0;
+static sig_atomic_t pid_count;
+static sig_atomic_t sigchld_count;
+static pid_t *pid_list;
 
-void handler(int signo)
+static void handler(int signo)
 {
+	if (signo == SIGCHLD)
+		sigchld_count++;
 	pid_count++;
+}
+
+static void cleanup(void)
+{
+	int i = 0;
+
+	while (pid_list[i] > 0) {
+		kill(pid_list[i], SIGKILL);
+		i++;
+	}
+
+	free(pid_list);
 }
 
 int main(int argc, char *argv[])
@@ -70,13 +86,14 @@ int main(int argc, char *argv[])
 	int chunksize = 1024 * 1024;	/* one meg at a time by default */
 	struct sysinfo sstats;
 	int i, pid_cntr;
-	pid_t pid, *pid_list;
+	pid_t pid;
 	struct sigaction act;
 
 	act.sa_handler = handler;
 	act.sa_flags = 0;
 	sigemptyset(&act.sa_mask);
 	sigaction(SIGRTMIN, &act, 0);
+	sigaction(SIGCHLD, &act, 0);
 
 	while ((c = getopt(argc, argv, "c:b:p:wvh")) != -1) {
 		switch (c) {
@@ -173,15 +190,20 @@ int main(int argc, char *argv[])
 	i = 0;
 	pid_cntr = 0;
 	pid = fork();
-	if (pid != 0)
+	if (pid < 0)
+		tst_brkm(TBROK | TERRNO, cleanup, "fork failed");
+	if (pid != 0) {
 		pid_cntr++;
-	pid_list[i] = pid;
+		pid_list[i] = pid;
+	}
 
 #if defined (_s390_)		/* s390's 31bit addressing requires smaller chunks */
 	while (pid != 0 && maxbytes > FIVE_HUNDRED_MB) {
 		i++;
 		maxbytes -= FIVE_HUNDRED_MB;
 		pid = fork();
+		if (pid < 0)
+			tst_brkm(TBROK | TERRNO, cleanup, "fork failed");
 		if (pid != 0) {
 			pid_cntr++;
 			pid_list[i] = pid;
@@ -197,6 +219,8 @@ int main(int argc, char *argv[])
 		i++;
 		maxbytes -= ONE_GB;
 		pid = fork();
+		if (pid < 0)
+		    tst_brkm(TBROK | TERRNO, cleanup, "fork failed");
 		if (pid != 0) {
 			pid_cntr++;
 			pid_list[i] = pid;
@@ -212,6 +236,8 @@ int main(int argc, char *argv[])
 		i++;
 		maxbytes -= THREE_GB;
 		pid = fork();
+		if (pid < 0)
+			tst_brkm(TBROK | TERRNO, cleanup, "fork failed");
 		if (pid != 0) {
 			pid_cntr++;
 			pid_list[i] = pid;
@@ -253,7 +279,6 @@ int main(int argc, char *argv[])
 		while (1)
 			sleep(1);
 	} else {
-		i = 0;
 		sysinfo(&sstats);
 
 		if (dowrite) {
@@ -268,7 +293,7 @@ int main(int argc, char *argv[])
 
 			while ((((unsigned long long)pre_mem - post_mem) <
 				(unsigned long long)original_maxbytes) &&
-			       pid_count < pid_cntr) {
+			       pid_count < pid_cntr && !sigchld_count) {
 				sleep(1);
 				sysinfo(&sstats);
 				post_mem =
@@ -280,17 +305,18 @@ int main(int argc, char *argv[])
 				    sstats.freeswap;
 			}
 		}
-		while (pid_list[i] != 0) {
-			kill(pid_list[i], SIGKILL);
-			i++;
-		}
-		if (dowrite)
+
+		if (sigchld_count) {
+			tst_resm(TFAIL, "child process exited unexpectedly");
+		} else if (dowrite) {
 			tst_resm(TPASS, "%llu kbytes allocated and used.",
 				 original_maxbytes / 1024);
-		else
+		} else {
 			tst_resm(TPASS, "%llu kbytes allocated only.",
 				 original_maxbytes / 1024);
+		}
+
 	}
-	free(pid_list);
+	cleanup();
 	tst_exit();
 }

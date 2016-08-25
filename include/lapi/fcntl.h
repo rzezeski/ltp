@@ -19,8 +19,23 @@
 #ifndef __LAPI_FCNTL_H__
 #define __LAPI_FCNTL_H__
 
+#include <fcntl.h>
+#include <sys/socket.h>
+
 #ifndef O_CLOEXEC
 # define O_CLOEXEC 02000000
+#endif
+
+#ifndef SOCK_CLOEXEC
+# define SOCK_CLOEXEC O_CLOEXEC
+#endif
+
+#ifndef SOCK_NONBLOCK
+# define SOCK_NONBLOCK O_NONBLOCK
+#endif
+
+#ifndef O_TMPFILE
+# define O_TMPFILE (020000000 | O_DIRECTORY)
 #endif
 
 #ifndef F_DUPFD_CLOEXEC
@@ -37,6 +52,18 @@
 
 #ifndef F_OWNER_PGRP
 # define F_OWNER_PGRP 2
+#endif
+
+#ifndef F_OFD_GETLK
+# define F_OFD_GETLK	36
+#endif
+
+#ifndef F_OFD_SETLK
+# define F_OFD_SETLK	37
+#endif
+
+#ifndef F_OFD_SETLKW
+# define F_OFD_SETLKW	38
 #endif
 
 #ifndef AT_FDCWD
@@ -60,11 +87,27 @@
 #endif
 
 #ifndef O_PATH
-# define O_PATH 010000000
+# ifdef __sparc__
+#  define O_PATH 0x1000000
+# else
+#  define O_PATH 010000000
+# endif
 #endif
 
 #ifndef FALLOC_FL_KEEP_SIZE
 # define FALLOC_FL_KEEP_SIZE 1
+#endif
+
+#ifndef RENAME_NOREPLACE
+# define RENAME_NOREPLACE	(1 << 0)
+#endif
+
+#ifndef RENAME_EXCHANGE
+# define RENAME_EXCHANGE		(1 << 1)
+#endif
+
+#ifndef RENAME_WHITEOUT
+# define RENAME_WHITEOUT		(1 << 2)
 #endif
 
 /* splice, vmsplice, tee */
@@ -72,9 +115,5 @@
 #ifndef SPLICE_F_NONBLOCK
 # define SPLICE_F_NONBLOCK 2
 #endif
-
-#include "lapi/splice.h"
-#include "lapi/vmsplice.h"
-#include "lapi/tee.h"
 
 #endif /* __LAPI_FCNTL_H__ */

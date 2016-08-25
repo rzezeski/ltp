@@ -132,6 +132,7 @@ int test_rwflag(int i, int cnt)
 	time_t atime;
 	struct passwd *ltpuser;
 	struct stat file_stat;
+	char readbuf[20];
 
 	switch (i) {
 	case 0:
@@ -307,11 +308,13 @@ int test_rwflag(int i, int cnt)
 
 		if (write(fd, "TEST_MS_NOATIME", 15) != 15) {
 			tst_resm(TWARN | TERRNO, "write %s failed", file);
+			close(fd);
 			return 1;
 		}
 
 		if (fstat(fd, &file_stat) == -1) {
 			tst_resm(TWARN | TERRNO, "stat %s failed #1", file);
+			close(fd);
 			return 1;
 		}
 
@@ -319,13 +322,15 @@ int test_rwflag(int i, int cnt)
 
 		sleep(1);
 
-		if (read(fd, NULL, 20) == -1) {
+		if (read(fd, readbuf, sizeof(readbuf)) == -1) {
 			tst_resm(TWARN | TERRNO, "read %s failed", file);
+			close(fd);
 			return 1;
 		}
 
 		if (fstat(fd, &file_stat) == -1) {
 			tst_resm(TWARN | TERRNO, "stat %s failed #2", file);
+			close(fd);
 			return 1;
 		}
 		close(fd);
@@ -355,7 +360,7 @@ static void setup(void)
 	if (!device)
 		tst_brkm(TCONF, cleanup, "Failed to obtain block device");
 
-	tst_mkfs(cleanup, device, fs_type, NULL);
+	tst_mkfs(cleanup, device, fs_type, NULL, NULL);
 
 	SAFE_MKDIR(cleanup, mntpoint, DIR_MODE);
 
@@ -375,7 +380,7 @@ static void setup(void)
 static void cleanup(void)
 {
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 
 	tst_rmdir();
 }

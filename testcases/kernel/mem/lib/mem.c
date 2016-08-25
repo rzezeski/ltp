@@ -20,7 +20,6 @@
 
 #include "test.h"
 #include "safe_macros.h"
-#include "safe_file_ops.h"
 #include "mem.h"
 #include "numa_helper.h"
 
@@ -30,6 +29,7 @@ static int alloc_mem(long int length, int testcase)
 {
 	char *s;
 	long i, pagesz = getpagesize();
+	int loop = 10;
 
 	tst_resm(TINFO, "thread (%lx), allocating %ld bytes.",
 		(unsigned long) pthread_self(), length);
@@ -39,8 +39,15 @@ static int alloc_mem(long int length, int testcase)
 	if (s == MAP_FAILED)
 		return errno;
 
-	if (testcase == MLOCK && mlock(s, length) == -1)
-		return errno;
+	if (testcase == MLOCK) {
+		while (mlock(s, length) == -1 && loop > 0) {
+			if (EAGAIN != errno)
+				return errno;
+			usleep(300000);
+			loop--;
+		}
+	}
+
 #ifdef HAVE_MADV_MERGEABLE
 	if (testcase == KSM && madvise(s, length, MADV_MERGEABLE) == -1)
 		return errno;
@@ -82,7 +89,12 @@ static void child_alloc(int testcase, int lite, int threads)
 			(void *)((long)testcase)));
 		if (TEST_RETURN) {
 			tst_resm(TINFO | TRERRNO, "pthread_create");
-			goto out;
+			/*
+			 * Keep going if thread other than first fails to
+			 * spawn due to lack of resources.
+			 */
+			if (i == 0 || TEST_RETURN != EAGAIN)
+				goto out;
 		}
 	}
 
@@ -97,7 +109,7 @@ out:
  * oom - allocates memory according to specified testcase and checks
  *       desired outcome (e.g. child killed, operation failed with ENOMEM)
  * @testcase: selects how child allocates memory
- *            valid choices are: OVERCOMMIT, NORMAL, MLOCK and KSM
+ *            valid choices are: NORMAL, MLOCK and KSM
  * @lite: if non-zero, child makes only single TESTMEM+MB allocation
  *        if zero, child keeps allocating memory until it gets killed
  *        or some operation fails
@@ -115,6 +127,10 @@ void oom(int testcase, int lite, int retcode, int allow_sigkill)
 
 	switch (pid = fork()) {
 	case -1:
+		if (errno == retcode) {
+			tst_resm(TPASS | TERRNO, "fork");
+			return;
+		}
 		tst_brkm(TBROK | TERRNO, cleanup, "fork");
 	case 0:
 		threads = MAX(1, tst_ncpus() - 1);
@@ -137,12 +153,17 @@ void oom(int testcase, int lite, int retcode, int allow_sigkill)
 				WTERMSIG(status),
 				tst_strsig(WTERMSIG(status)));
 		}
-	} else	if (WIFEXITED(status) && WEXITSTATUS(status) == retcode) {
-		tst_resm(TPASS, "victim retcode: (%d) %s",
+	} else if (WIFEXITED(status)) {
+		if (WEXITSTATUS(status) == retcode) {
+			tst_resm(TPASS, "victim retcode: (%d) %s",
 				retcode, strerror(retcode));
+		} else {
+			tst_resm(TFAIL, "victim unexpectedly ended with "
+				"retcode: %d, expected: %d",
+				WEXITSTATUS(status), retcode);
+		}
 	} else {
-		tst_resm(TFAIL, "victim unexpectedly ended with retcode: %d, "
-				"expected: %d", WEXITSTATUS(status), retcode);
+		tst_resm(TFAIL, "victim unexpectedly ended");
 	}
 }
 
@@ -193,6 +214,8 @@ static void set_global_mempolicy(int mempolicy)
 
 void testoom(int mempolicy, int lite, int retcode, int allow_sigkill)
 {
+	int ksm_run_orig;
+
 	set_global_mempolicy(mempolicy);
 
 	tst_resm(TINFO, "start normal OOM testing.");
@@ -201,16 +224,39 @@ void testoom(int mempolicy, int lite, int retcode, int allow_sigkill)
 	tst_resm(TINFO, "start OOM testing for mlocked pages.");
 	oom(MLOCK, lite, retcode, allow_sigkill);
 
-	if (access(PATH_KSM, F_OK) == -1) {
-		tst_resm(TINFO, "KSM configuration is not enabled, "
+	/*
+	 * Skip oom(KSM) if lite == 1, since limit_in_bytes may vary from
+	 * run to run, which isn't reliable for oom03 cgroup test.
+	 */
+	if (access(PATH_KSM, F_OK) == -1 || lite == 1) {
+		tst_resm(TINFO, "KSM is not configed or lite == 1, "
 			 "skip OOM test for KSM pags");
 	} else {
 		tst_resm(TINFO, "start OOM testing for KSM pages.");
+		SAFE_FILE_SCANF(cleanup, PATH_KSM "run", "%d", &ksm_run_orig);
+		SAFE_FILE_PRINTF(cleanup, PATH_KSM "run", "1");
 		oom(KSM, lite, retcode, allow_sigkill);
+		SAFE_FILE_PRINTF(cleanup,PATH_KSM "run", "%d", ksm_run_orig);
 	}
 }
 
 /* KSM */
+
+static int max_page_sharing;
+
+void save_max_page_sharing(void)
+{
+	if (access(PATH_KSM "max_page_sharing", F_OK) == 0)
+	        SAFE_FILE_SCANF(NULL, PATH_KSM "max_page_sharing",
+	                        "%d", &max_page_sharing);
+}
+
+void restore_max_page_sharing(void)
+{
+	if (access(PATH_KSM "max_page_sharing", F_OK) == 0)
+	        FILE_PRINTF(PATH_KSM "max_page_sharing",
+	                         "%d", max_page_sharing);
+}
 
 static void check(char *path, long int value)
 {
@@ -484,9 +530,12 @@ void create_same_memory(int size, int num, int unit)
 	stop_ksm_children(child, num);
 
 	tst_resm(TINFO, "KSM merging...");
+	if (access(PATH_KSM "max_page_sharing", F_OK) == 0)
+		SAFE_FILE_PRINTF(cleanup, PATH_KSM "max_page_sharing",
+				"%ld", size * pages * num);
 	SAFE_FILE_PRINTF(cleanup, PATH_KSM "run", "1");
 	SAFE_FILE_PRINTF(cleanup, PATH_KSM "pages_to_scan", "%ld",
-			 size * pages *num);
+			 size * pages * num);
 	SAFE_FILE_PRINTF(cleanup, PATH_KSM "sleep_millisecs", "0");
 
 	resume_ksm_children(child, num);
@@ -577,6 +626,9 @@ void test_ksm_merge_across_nodes(unsigned long nr_pages)
 	SAFE_FILE_PRINTF(cleanup, PATH_KSM "sleep_millisecs", "0");
 	SAFE_FILE_PRINTF(cleanup, PATH_KSM "pages_to_scan", "%ld",
 			 nr_pages * num_nodes);
+	if (access(PATH_KSM "max_page_sharing", F_OK) == 0)
+		SAFE_FILE_PRINTF(cleanup, PATH_KSM "max_page_sharing",
+			"%ld", nr_pages * num_nodes);
 	/*
 	 * merge_across_nodes setting can be changed only when there
 	 * are no ksm shared pages in system, so set run 2 to unmerge
@@ -636,197 +688,6 @@ void ksm_usage(void)
 }
 
 /* THP */
-
-static int alloc_transparent_hugepages(int nr_thps, int hg_aligned)
-{
-	unsigned long hugepagesize, size;
-	void *addr;
-	int ret;
-
-	hugepagesize = read_meminfo("Hugepagesize:") * KB;
-	size = nr_thps * hugepagesize;
-
-	if (hg_aligned) {
-		ret = posix_memalign(&addr, hugepagesize, size);
-		if (ret != 0) {
-			printf("posix_memalign failed\n");
-			return -1;
-		}
-	} else {
-		addr = mmap(NULL, size, PROT_READ|PROT_WRITE,
-			    MAP_PRIVATE|MAP_ANON, -1, 0);
-		if (addr == MAP_FAILED) {
-			perror("mmap");
-			return -1;
-		}
-	}
-
-	memset(addr, 10, size);
-
-	tst_resm(TINFO, "child[%d] stop here", getpid());
-	/*
-	 * stop here, until the father finish to calculate
-	 * all the transparent hugepages.
-	 */
-	if (raise(SIGSTOP) == -1) {
-		perror("kill");
-		return -1;
-	}
-
-	return 0;
-}
-
-static void khugepaged_scan_done(void)
-{
-	int changing = 1, count = 0, interval;
-	long old_pages_collapsed = 0, old_max_ptes_none = 0,
-		old_pages_to_scan = 0;
-	long pages_collapsed = 0, max_ptes_none = 0, pages_to_scan = 0;
-
-	/*
-	 * as 'khugepaged' run 100% during testing, so 5s is an
-	 * enough interval for us to recognize if 'khugepaged'
-	 * finish scanning proceses' anonymous hugepages or not.
-	 */
-	interval = 5;
-
-	while (changing) {
-		sleep(interval);
-		count++;
-
-		SAFE_FILE_SCANF(cleanup, PATH_KHPD "pages_collapsed",
-			       "%ld", &pages_collapsed);
-		SAFE_FILE_SCANF(cleanup, PATH_KHPD "max_ptes_none",
-			       "%ld", &max_ptes_none);
-		SAFE_FILE_SCANF(cleanup, PATH_KHPD "pages_to_scan",
-			       "%ld", &pages_to_scan);
-
-		if (pages_collapsed != old_pages_collapsed ||
-		    max_ptes_none != old_max_ptes_none ||
-		    pages_to_scan != old_pages_to_scan) {
-			old_pages_collapsed = pages_collapsed;
-			old_max_ptes_none = max_ptes_none;
-			old_pages_to_scan = pages_to_scan;
-		} else {
-			changing = 0;
-		}
-	}
-
-	tst_resm(TINFO, "khugepaged daemon takes %ds to scan all thp pages",
-		 count * interval);
-}
-
-static void verify_thp_size(int *children, int nr_children, int nr_thps)
-{
-	FILE *fp;
-	char path[BUFSIZ], buf[BUFSIZ], line[BUFSIZ];
-	int i, ret;
-	long expect_thps; /* the amount of per child's transparent hugepages */
-	long val, actual_thps;
-	long hugepagesize;
-
-	hugepagesize = read_meminfo("Hugepagesize:");
-	expect_thps = nr_thps * hugepagesize;
-
-	for (i = 0; i < nr_children; i++) {
-		actual_thps = 0;
-
-		snprintf(path, BUFSIZ, "/proc/%d/smaps", children[i]);
-		fp = fopen(path, "r");
-		while (fgets(line, BUFSIZ, fp) != NULL) {
-			ret = sscanf(line, "%64s %ld", buf, &val);
-			if (ret == 2 && val != 0) {
-				if (strcmp(buf, "AnonHugePages:") == 0)
-					actual_thps += val;
-			}
-		}
-
-		if (actual_thps != expect_thps)
-			tst_resm(TFAIL, "child[%d] got %ldKB thps - expect %ld"
-				"KB thps", getpid(), actual_thps, expect_thps);
-		fclose(fp);
-	}
-}
-
-void test_transparent_hugepage(int nr_children, int nr_thps,
-			       int hg_aligned, int mempolicy)
-{
-	unsigned long hugepagesize, memfree;
-	int i, *pids, ret, status;
-
-	if (mempolicy)
-		set_global_mempolicy(mempolicy);
-
-	memfree = read_meminfo("MemFree:");
-	tst_resm(TINFO, "The current MemFree is %luMB", memfree / KB);
-	if (memfree < MB)
-		tst_resm(TCONF, "Not enough memory for testing");
-
-	hugepagesize = read_meminfo("Hugepagesize:");
-	tst_resm(TINFO, "The current Hugepagesize is %luMB", hugepagesize / KB);
-
-	pids = malloc(nr_children * sizeof(int));
-	if (pids == NULL)
-		tst_brkm(TBROK | TERRNO, cleanup, "malloc");
-
-	for (i = 0; i < nr_children; i++) {
-		switch (pids[i] = fork()) {
-		case -1:
-			tst_brkm(TBROK | TERRNO, cleanup, "fork");
-
-		case 0:
-			ret = alloc_transparent_hugepages(nr_thps, hg_aligned);
-			exit(ret);
-		}
-	}
-
-	tst_resm(TINFO, "Stop all children...");
-	for (i = 0; i < nr_children; i++) {
-		if (waitpid(pids[i], &status, WUNTRACED) == -1)
-			tst_brkm(TBROK|TERRNO, cleanup, "waitpid");
-		if (!WIFSTOPPED(status))
-			tst_brkm(TBROK, cleanup,
-				 "child[%d] was not stoppted", pids[i]);
-	}
-
-	tst_resm(TINFO, "Start to scan all transparent hugepages...");
-	khugepaged_scan_done();
-
-	tst_resm(TINFO, "Start to verify transparent hugepage size...");
-	verify_thp_size(pids, nr_children, nr_thps);
-
-	tst_resm(TINFO, "Wake up all children...");
-	for (i = 0; i < nr_children; i++) {
-		if (kill(pids[i], SIGCONT) == -1)
-			tst_brkm(TBROK | TERRNO, cleanup,
-				 "signal continue child[%d]", pids[i]);
-	}
-
-	/* wait all children finish their task */
-	for (i = 0; i < nr_children; i++) {
-		if (waitpid(pids[i], &status, 0) == -1)
-			tst_brkm(TBROK|TERRNO, cleanup, "waitpid %d", pids[i]);
-
-		if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-			tst_resm(TFAIL, "the child[%d] unexpectedly failed:"
-				 " %d", pids[i], status);
-	}
-}
-
-void check_thp_options(int *nr_children, int *nr_thps)
-{
-	if (opt_nr_children)
-		*nr_children = SAFE_STRTOL(NULL, opt_nr_children_str,
-					   0, LONG_MAX);
-	if (opt_nr_thps)
-		*nr_thps = SAFE_STRTOL(NULL, opt_nr_thps_str, 0, LONG_MAX);
-}
-
-void thp_usage(void)
-{
-	printf("  -n      Number of processes\n");
-	printf("  -N      Number of transparent hugepages\n");
-}
 
 /* cpuset/memcg */
 
@@ -1104,4 +965,36 @@ void update_shm_size(size_t * shm_size)
 		tst_resm(TINFO, "Set shm_size to shmmax: %ld", shmmax);
 		*shm_size = shmmax;
 	}
+}
+
+int range_is_mapped(void (*cleanup_fn) (void), unsigned long low, unsigned long high)
+{
+	FILE *fp;
+
+	fp = fopen("/proc/self/maps", "r");
+	if (fp == NULL)
+		tst_brkm(TBROK | TERRNO, cleanup_fn, "Failed to open /proc/self/maps.");
+
+	while (!feof(fp)) {
+		unsigned long start, end;
+		int ret;
+
+		ret = fscanf(fp, "%lx-%lx %*[^\n]\n", &start, &end);
+		if (ret != 2) {
+			fclose(fp);
+			tst_brkm(TBROK | TERRNO, cleanup_fn, "Couldn't parse /proc/self/maps line.");
+		}
+
+		if ((start >= low) && (start < high)) {
+			fclose(fp);
+			return 1;
+		}
+		if ((end >= low) && (end < high)) {
+			fclose(fp);
+			return 1;
+		}
+	}
+
+	fclose(fp);
+	return 0;
 }

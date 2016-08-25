@@ -251,17 +251,22 @@ tst_restore_ipaddr()
 	return $ret
 }
 
-# tst_netload ADDR [FILE] [TYPE]
+# tst_netload ADDR [FILE] [TYPE] [OPTS]
 # Run network load test
 # ADDR: IP address
 # FILE: file with result time
 # TYPE: PING or TFO (TCP traffic)
+# OPTS: additional options
 tst_netload()
 {
 	local ip_addr="$1"
 	local rfile=${2:-"netload.res"}
 	local type=${3:-"TFO"}
+	local addopts=${@:4}
 	local ret=0
+	clients_num=${clients_num:-"2"}
+	client_requests=${client_requests:-"500000"}
+	max_requests=${max_requests:-"3"}
 
 	case "$type" in
 	PING)
@@ -280,11 +285,23 @@ tst_netload()
 		[ $? -ne 0 ] && tst_brkm TBROK "failed to get unused port"
 
 		tst_resm TINFO "run tcp_fastopen with '$ip_addr', port '$port'"
-		tst_rhost_run -s -b -c "tcp_fastopen -R $max_requests -g $port"
+		tst_rhost_run -s -b -c "tcp_fastopen -R $max_requests \
+			-g $port $addopts"
+
+		# check that tcp_fastopen on rhost in 'Listening' state
+		local sec_waited=
+		for sec_waited in $(seq 1 60); do
+			tst_rhost_run -c "ss -ltn | grep -q $port" && break
+			if [ $sec_waited -eq 60 ]; then
+				tst_resm TINFO "rhost not in LISTEN state"
+				return 1
+			fi
+			sleep 1
+		done
 
 		# run local tcp client
-		tcp_fastopen -a $clients_num -r $client_requests -l \
-			-H $ip_addr -g $port -d $rfile > /dev/null || ret=1
+		tcp_fastopen -a $clients_num -r $client_requests -l -H $ip_addr\
+			 -g $port -d $rfile $addopts > /dev/null || ret=1
 
 		if [ $ret -eq 0 -a ! -f $rfile ]; then
 			tst_brkm TBROK "can't read $rfile"
@@ -297,3 +314,99 @@ tst_netload()
 
 	return $ret
 }
+
+# tst_ping [IFACE] [DST ADDR] [MESSAGE SIZE ARRAY]
+# Check icmp connectivity
+# IFACE: source interface name
+# DST ADDR: destination IPv4 or IPv6 address
+# MESSAGE SIZE ARRAY: message size array
+tst_ping()
+{
+	# The max number of ICMP echo request
+	PING_MAX=${PING_MAX:-"10"}
+
+	local src_iface=${1:-"$(tst_iface)"}
+	local dst_addr=${2:-"$(tst_ipaddr rhost)"}; shift 2
+	local msg_sizes=$@
+	local ret=0
+
+	# ping cmd use 56 as default message size
+	for size in ${msg_sizes:-"56"}; do
+		ping$TST_IPV6 -I $src_iface -c $PING_MAX $dst_addr \
+			-s $size > /dev/null 2>&1
+		ret=$?
+		if [ $ret -eq 0 ]; then
+			tst_resm TINFO "tst_ping IPv${TST_IPV6:-4} msg_size $size pass"
+		else
+			tst_resm TINFO "tst_ping IPv${TST_IPV6:-4} msg_size $size fail"
+			break
+		fi
+	done
+	return $ret
+}
+
+# Management Link
+[ -z "$RHOST" ] && tst_brkm TBROK "RHOST variable not defined"
+export RHOST="$RHOST"
+export PASSWD=${PASSWD:-""}
+# Don't use it in new tests, use tst_rhost_run() from test_net.sh instead.
+export LTP_RSH=${LTP_RSH:-"rsh -n"}
+
+# Test Links
+# Warning: make sure to set valid interface names and IP addresses below.
+# Set names for test interfaces, e.g. "eth0 eth1"
+export LHOST_IFACES=${LHOST_IFACES:-"eth0"}
+export RHOST_IFACES=${RHOST_IFACES:-"eth0"}
+
+# Set corresponding HW addresses, e.g. "00:00:00:00:00:01 00:00:00:00:00:02"
+export LHOST_HWADDRS=${LHOST_HWADDRS:-"$(tst_get_hwaddrs lhost)"}
+export RHOST_HWADDRS=${RHOST_HWADDRS:-"$(tst_get_hwaddrs rhost)"}
+
+# Set first three octets of the network address, default is '10.0.0'
+export IPV4_NETWORK=${IPV4_NETWORK:-"10.0.0"}
+# Set local host last octet, default is '2'
+export LHOST_IPV4_HOST=${LHOST_IPV4_HOST:-"2"}
+# Set remote host last octet, default is '1'
+export RHOST_IPV4_HOST=${RHOST_IPV4_HOST:-"1"}
+# Set the reverse of IPV4_NETWORK
+export IPV4_NET_REV=${IPV4_NET_REV:-"0.0.10"}
+# Set first three octets of the network address, default is 'fd00:1:1:1'
+export IPV6_NETWORK=${IPV6_NETWORK:-"fd00:1:1:1"}
+# Set local host last octet, default is '2'
+export LHOST_IPV6_HOST=${LHOST_IPV6_HOST:-":2"}
+# Set remote host last octet, default is '1'
+export RHOST_IPV6_HOST=${RHOST_IPV6_HOST:-":1"}
+# Reverse network portion of the IPv6 address
+export IPV6_NET_REV=${IPV6_NET_REV:-"1.0.0.0.1.0.0.0.1.0.0.0.0.0.d.f"}
+# Reverse host portion of the IPv6 address of the local host
+export LHOST_IPV6_REV=${LHOST_IPV6_REV:-"2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0"}
+# Reverse host portion of the IPv6 address of the remote host
+export RHOST_IPV6_REV=${RHOST_IPV6_REV:-"1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0"}
+
+# Networks that aren't reachable through the test links
+export IPV4_NET16_UNUSED=${IPV4_NET16_UNUSED:-"10.23"}
+export IPV6_NET32_UNUSED=${IPV6_NET32_UNUSED:-"fd00:23"}
+
+export HTTP_DOWNLOAD_DIR=${HTTP_DOWNLOAD_DIR:-"/var/www/html"}
+export FTP_DOWNLOAD_DIR=${FTP_DOWNLOAD_DIR:-"/var/ftp"}
+export FTP_UPLOAD_DIR=${FTP_UPLOAD_DIR:-"/var/ftp/pub"}
+export FTP_UPLOAD_URLDIR=${FTP_UPLOAD_URLDIR:-"pub"}
+
+# network/stress tests require additional parameters
+export NS_DURATION=${NS_DURATION:-"3600"}
+export NS_TIMES=${NS_TIMES:-"10000"}
+export CONNECTION_TOTAL=${CONNECTION_TOTAL:-"4000"}
+export IP_TOTAL=${IP_TOTAL:-"10000"}
+export IP_TOTAL_FOR_TCPIP=${IP_TOTAL_FOR_TCPIP:-"100"}
+export ROUTE_TOTAL=${ROUTE_TOTAL:-"10000"}
+export MTU_CHANGE_TIMES=${MTU_CHANGE_TIMES:-"1000"}
+export IF_UPDOWN_TIMES=${IF_UPDOWN_TIMES:-"10000"}
+export DOWNLOAD_BIGFILESIZE=${DOWNLOAD_BIGFILESIZE:-"2147483647"}
+export DOWNLOAD_REGFILESIZE=${DOWNLOAD_REGFILESIZE:-"1048576"}
+export UPLOAD_BIGFILESIZE=${UPLOAD_BIGFILESIZE:-"2147483647"}
+export UPLOAD_REGFILESIZE=${UPLOAD_REGFILESIZE:-"1024"}
+export MCASTNUM_NORMAL=${MCASTNUM_NORMAL:-"20"}
+export MCASTNUM_HEAVY=${MCASTNUM_HEAVY:-"40000"}
+
+# More information about network parameters can be found
+# in the following document: testcases/network/stress/README

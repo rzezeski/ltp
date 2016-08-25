@@ -55,9 +55,10 @@
 #include "test.h"
 #include "safe_macros.h"
 #include "mem.h"
+#include "hugetlb.h"
 
-#define LOW_ADDR       (void *)(0x80000000)
-#define LOW_ADDR2      (void *)(0x90000000)
+#define LOW_ADDR       0x80000000
+#define LOW_ADDR2      0x90000000
 
 static char TEMPFILE[MAXPATHLEN];
 
@@ -65,14 +66,14 @@ char *TCID = "hugemmap02";
 int TST_TOTAL = 1;
 static unsigned long *addr;
 static unsigned long *addr2;
+static unsigned long low_addr = LOW_ADDR;
+static unsigned long low_addr2 = LOW_ADDR2;
 static unsigned long *addrlist[5];
 static int i;
 static int fildes;
 static int nfildes;
 static char *Hopt;
-static char *nr_opt;
 static long hugepages = 128;
-static long orig_hugepages;
 
 static void help(void);
 
@@ -90,6 +91,8 @@ int main(int ac, char **av)
 	};
 
 	tst_parse_opts(ac, av, options, &help);
+
+	check_hugepage();
 
 	if (!Hflag) {
 		tst_tmpdir();
@@ -127,22 +130,34 @@ int main(int ac, char **av)
 			addrlist[i] = addr;
 		}
 
+		while (range_is_mapped(cleanup, low_addr, low_addr + map_sz) == 1) {
+			low_addr = low_addr + 0x10000000;
+
+			if (low_addr < LOW_ADDR)
+				tst_brkm(TBROK | TERRNO, cleanup,
+						"no empty region to use");
+		}
 		/* mmap using normal pages and a low memory address */
-		addr = mmap(LOW_ADDR, page_sz, PROT_READ,
+		addr = mmap((void *)low_addr, page_sz, PROT_READ,
 			    MAP_SHARED | MAP_FIXED, nfildes, 0);
 		if (addr == MAP_FAILED)
 			tst_brkm(TBROK | TERRNO, cleanup,
 				 "mmap failed on nfildes");
 
+		while (range_is_mapped(cleanup, low_addr2, low_addr2 + map_sz) == 1) {
+			low_addr2 = low_addr2 + 0x10000000;
+
+			if (low_addr2 < LOW_ADDR2)
+				tst_brkm(TBROK | TERRNO, cleanup,
+						"no empty region to use");
+		}
 		/* Attempt to mmap a huge page into a low memory address */
-		addr2 = mmap(LOW_ADDR2, map_sz, PROT_READ | PROT_WRITE,
+		addr2 = mmap((void *)low_addr2, map_sz, PROT_READ | PROT_WRITE,
 			     MAP_SHARED, fildes, 0);
 #if __WORDSIZE == 64		/* 64-bit process */
 		if (addr2 == MAP_FAILED) {
 			tst_resm(TFAIL | TERRNO, "huge mmap failed unexpectedly"
 				 " with %s (64-bit)", TEMPFILE);
-			close(fildes);
-			continue;
 		} else {
 			tst_resm(TPASS, "huge mmap succeeded (64-bit)");
 		}
@@ -153,8 +168,6 @@ int main(int ac, char **av)
 		else if (addr2 > 0) {
 			tst_resm(TCONF,
 				 "huge mmap failed to test the scenario");
-			close(fildes);
-			continue;
 		} else if (addr == 0)
 			tst_resm(TPASS, "huge mmap succeeded (32-bit)");
 #endif
@@ -166,13 +179,12 @@ int main(int ac, char **av)
 					 "munmap of addrlist[%d] failed", i);
 		}
 
-#if __WORDSIZE == 64
 		if (munmap(addr2, map_sz) == -1)
 			tst_brkm(TFAIL | TERRNO, NULL, "huge munmap failed");
-#endif
 		if (munmap(addr, page_sz) == -1)
 			tst_brkm(TFAIL | TERRNO, NULL, "munmap failed");
 
+		close(nfildes);
 		close(fildes);
 	}
 

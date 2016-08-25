@@ -61,7 +61,7 @@ to \fBtst_tmpdir()\fR and should be called immediately prior to the test
 exiting via \fBtst_exit()\fR.
 .P
 \fBtst_rmdir()\fR uses the \fBsystem\fR(3S) library routine (which in turn
-calls \fBfork\fR(2)), so tests that use it \fBcannot\fR treat SIGCLD as an
+calls \fBfork\fR(2)), so tests that use it \fBcannot\fR treat SIGCHLD as an
 unexpected signal.
 .P
 Users may gain access to the name of the temporary directory by declaring the
@@ -70,7 +70,7 @@ external character pointer \fBTESTDIR\fR.
 The \fBtst_rmdir()\fR function will check the \fBTESTDIR\fR global variable
 to ensure that the user is not attempting to remove the root directory or
 some unspecified directories with a "*" parameter.  All error/warning
-messages are delivered through \fBtst_res()\fR.
+messages are delivered through \fBtst_resm()\fR.
 .SH "SEE ALSO"
 fork(2), system(3S), tst_res(3), tmpnam(3S).
 

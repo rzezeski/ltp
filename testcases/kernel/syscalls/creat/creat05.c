@@ -1,49 +1,28 @@
 /*
+ * Copyright (c) International Business Machines  Corp., 2001
+ *  07/2001 Ported by Wayne Boyer
  *
- *   Copyright (c) International Business Machines  Corp., 2001
+ * This program is free software;  you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *   This program is free software;  you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ * the GNU General Public License for more details.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY;  without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- *   the GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program;  if not, write to the Free Software
- *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * You should have received a copy of the GNU General Public License
+ * along with this program;  if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
 /*
- * NAME
- *	creat05.c
- *
- * DESCRIPTION
- *	Testcase to check that creat(2) system call returns EMFILE.
- *
- * ALGORITHM
- *	A process creates a temporary test directory, then it should
- *	get the system configured NOFILE parameter (ie. the maximum no. of
- *	open files of a process). This can be done using the getdtablesize()
- *	system call. Once this is determined, the process should attempt
- *	to creat(2) the this no. of files (can be done using a "for" loop).
- *	Then, the process should attempt to creat() another file, which should
- *	fail with EMFILE.
- *
- * USAGE
- *	creat05
- *
- * HISTORY
- *	07/2001 Ported by Wayne Boyer
- *
- * RESTRICTIONS
- *	None
+ * Testcase to check that creat(2) system call returns EMFILE.
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -52,134 +31,65 @@
 #include <fcntl.h>
 #include <linux/limits.h>
 #include <unistd.h>
-#include "test.h"
+#include "tst_test.h"
 
-char *TCID = "creat05";
-int TST_TOTAL = 1;
+static int *opened_fds, num_opened_fds;
 
-#define MODE	0666
-
-void remove_files(int);
-void setup(void);
-void cleanup(void);
-
-int fd, ifile, mypid, first;
-int *buf;
-char fname[40];
-
-int main(int ac, char **av)
+static void verify_creat(void)
 {
-	int lc;
+	TEST(creat("filename", 0666));
 
-	tst_parse_opts(ac, av, NULL, NULL);
-
-	setup();
-
-	for (lc = 0; TEST_LOOPING(lc); lc++) {
-
-		/* reset tst_count in case we are looping */
-		tst_count = 0;
-
-		TEST(creat(fname, MODE));
-
-		if (TEST_RETURN != -1) {
-			tst_resm(TFAIL, "call succeeded unexpectedly");
-			continue;
-		}
-
-		if (TEST_ERRNO == EMFILE) {
-			tst_resm(TPASS, "call failed with expected error - "
-				 "EMFILE");
-		} else {
-			tst_resm(TFAIL | TTERRNO, "Expected EMFILE");
-		}
-
-		remove_files(ifile);
+	if (TEST_RETURN != -1) {
+		tst_res(TFAIL, "call succeeded unexpectedly");
+		SAFE_CLOSE(TEST_RETURN);
+		return;
 	}
-	cleanup();
 
-	tst_exit();
+	if (TEST_ERRNO == EMFILE)
+		tst_res(TPASS, "creat() failed with EMFILE");
+	else
+		tst_res(TFAIL | TTERRNO, "Expected EMFILE");
 }
 
-/*
- * setup() - performs all ONE TIME setup for this test.
- */
-void setup(void)
+static void setup(void)
 {
 	int max_open;
-
-	tst_sig(NOFORK, DEF_HANDLER, cleanup);
-
-	TEST_PAUSE;
-
-	/* make a temporary directory and cd to it */
-	tst_tmpdir();
-
-	umask(0);
-	mypid = getpid();
-	sprintf(fname, "creat05.%d", mypid);
-	unlink(fname);
-
-	/* create a file to get the first file descriptor available */
-	if ((first = fd = creat(fname, MODE)) == -1) {
-		tst_brkm(TFAIL, cleanup, "Cannot open first file");
-	}
-
-	close(fd);
-	unlink(fname);
-	tst_resm(TINFO, "first file is #%d", fd);
+	int fd;
+	char fname[PATH_MAX];
 
 	/* get the maximum number of files that we can open */
 	max_open = getdtablesize();
-	/* Allocate memory for stat and ustat structure variables */
-	if ((buf = malloc(sizeof(int) * max_open - first)) == NULL) {
-		tst_brkm(TBROK, NULL, "Failed to allocate Memory");
-	}
+	tst_res(TINFO, "getdtablesize() = %d", max_open);
+	opened_fds = SAFE_MALLOC(max_open * sizeof(int));
 
 	/* now open as many files as we can up to max_open */
-	for (ifile = first; ifile <= max_open; ifile++) {
-		sprintf(fname, "creat05.%d.%d", ifile, mypid);
-		if ((fd = creat(fname, 0666)) == -1) {
-			tst_resm(TINFO, "could not creat file "
-				 "#%d", ifile + 1);
-			if (errno != EMFILE) {
-				remove_files(ifile);
-				tst_brkm(TBROK | TERRNO, cleanup,
-					 "Failed unexpectedly (expected EMFILE)");
-			}
-			break;
-		}
-		buf[ifile - first] = fd;
-	}
+	do {
+		snprintf(fname, sizeof(fname), "creat05_%d", num_opened_fds);
+		fd = SAFE_CREAT(fname, 0666);
+		opened_fds[num_opened_fds++] = fd;
+	} while (fd < max_open - 1);
+
+	tst_res(TINFO, "Opened additional #%d fds", num_opened_fds);
 }
 
-/*
- * remove_files - remove the temporary files that were created
- */
-void remove_files(int nfiles)
+static void cleanup(void)
 {
 	int i;
 
-	for (i = first; i < nfiles; i++) {
-		sprintf(fname, "creat05.%d.%d", i, mypid);
-		close(buf[i - first]);
-		unlink(fname);
+	for (i = 0; i < num_opened_fds; i++) {
+		if (close(opened_fds[i])) {
+			tst_res(TWARN | TERRNO, "close(%i) failed",
+				opened_fds[i]);
+		}
 	}
+
+	free(opened_fds);
 }
 
-/*
- * cleanup() - performs all ONE TIME cleanup for this test at
- *	       completion or premature exit.
- */
-void cleanup(void)
-{
-	/*
-	 * print timing stats if that option was specified.
-	 * print errno log if that option was specified.
-	 */
-	close(first);
-
-	/* delete the test directory created in setup() */
-	tst_rmdir();
-
-}
+static struct tst_test test = {
+	.tid = "creat05",
+	.test_all = verify_creat,
+	.needs_tmpdir = 1,
+	.setup = setup,
+	.cleanup = cleanup,
+};

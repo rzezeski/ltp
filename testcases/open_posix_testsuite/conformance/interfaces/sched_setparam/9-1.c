@@ -30,7 +30,8 @@
  *   5. Check if the shared value has been changed by the child process. If
  *      not, the test fail.
  */
-#define _GNU_SOURCE
+#include "affinity.h"
+
 #include <errno.h>
 #include <sched.h>
 #include <stdio.h>
@@ -41,48 +42,11 @@
 #include <time.h>
 #include <unistd.h>
 #include "posixtest.h"
-#include "affinity.h"
-
-#ifdef BSD
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/sysctl.h>
-#endif
-
-#ifdef HPUX
-#include <sys/param.h>
-#include <sys/pstat.h>
-#endif
+#include "ncpu.h"
 
 static int nb_cpu;
 static int *shmptr;
 static int mean_prio;
-
-static int get_ncpu(void)
-{
-	int ncpu = -1;
-
-	/* This syscall is not POSIX but it should work on many system */
-#ifdef _SC_NPROCESSORS_ONLN
-	ncpu = sysconf(_SC_NPROCESSORS_ONLN);
-#else
-#ifdef BSD
-	int mib[2];
-	size_t len = sizeof(ncpu);
-	mib[0] = CTL_HW;
-	mib[1] = HW_NCPU;
-	sysctl(mib, 2, &ncpu, &len, NULL, 0);
-#else /* !BSD */
-#ifdef HPUX
-	struct pst_dynamic psd;
-	pstat_getdynamic(&psd, sizeof(psd), 1, 0);
-	ncpu = (int)psd.psd_proc_cnt;
-#endif /* HPUX */
-#endif /* BSD */
-#endif /* _SC_NPROCESSORS_ONLN */
-
-	return ncpu;
-}
 
 static void child_process(void)
 {
@@ -145,7 +109,7 @@ int main(void)
 	int *child_pid, oldcount, newcount, shm_id, i;
 	struct sched_param param;
 	key_t key;
-	int rc = set_affinity(0);
+	int rc = set_affinity_single();
 	if (rc) {
 		nb_cpu = get_ncpu();
 		if (nb_cpu == -1) {

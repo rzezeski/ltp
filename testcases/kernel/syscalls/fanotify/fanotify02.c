@@ -25,6 +25,7 @@
  * DESCRIPTION
  *     Check that fanotify work for children of a directory
  */
+#define _GNU_SOURCE
 #include "config.h"
 
 #include <stdio.h>
@@ -243,8 +244,8 @@ static void setup(void)
 
 static void cleanup(void)
 {
-	if (close(fd_notify) == -1)
-		tst_resm(TWARN, "close(%d) failed", fd_notify);
+	if (fd_notify > 0 && close(fd_notify))
+		tst_resm(TWARN | TERRNO, "close(%d) failed", fd_notify);
 
 	tst_rmdir();
 }

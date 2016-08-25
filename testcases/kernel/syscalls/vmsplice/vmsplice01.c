@@ -35,9 +35,10 @@
 
 #include "test.h"
 #include "linux_syscall_numbers.h"
-#include "tst_fs_type.h"
 #include "safe_macros.h"
 #include "lapi/fcntl.h"
+#include "lapi/splice.h"
+#include "lapi/vmsplice.h"
 
 #define TEST_BLOCK_SIZE (1<<17)	/* 128K */
 

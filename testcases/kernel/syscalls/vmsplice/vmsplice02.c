@@ -37,8 +37,8 @@
 #include "test.h"
 #include "safe_macros.h"
 #include "linux_syscall_numbers.h"
-#include "tst_fs_type.h"
 #include "lapi/fcntl.h"
+#include "lapi/vmsplice.h"
 
 #define TESTFILE "testfile"
 

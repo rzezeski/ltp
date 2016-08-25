@@ -112,6 +112,8 @@ void cleanup(void)
 /******************************************************************************/
 void setup(void)
 {
+	tst_require_root();
+
 	/* Capture signals if any */
 	/* Create temporary directories */
 	TEST_PAUSE;
@@ -268,7 +270,7 @@ static int do_test(struct test_case *tc)
 	struct mq_attr new, old, *p_attr;
 
 	/*
-	 * When test ended with SIGTERM etc, mq discriptor is left remains.
+	 * When test ended with SIGTERM etc, mq descriptor is left remains.
 	 * So we delete it first.
 	 */
 	TEST(mq_unlink(QUEUE_NAME));

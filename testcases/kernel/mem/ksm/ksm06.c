@@ -95,8 +95,8 @@ void setup(void)
 	if (access(PATH_KSM "merge_across_nodes", F_OK) == -1)
 		tst_brkm(TCONF, NULL, "no merge_across_nodes sysfs knob");
 
-	if (!is_numa(NULL))
-		tst_brkm(TCONF, NULL, "The case need a NUMA system.");
+	if (!is_numa(NULL, NH_MEMS, 2))
+		tst_brkm(TCONF, NULL, "The case needs a NUMA system.");
 
 	/* save the current value */
 	SAFE_FILE_SCANF(NULL, PATH_KSM "run", "%d", &run);
@@ -104,6 +104,8 @@ void setup(void)
 			"%d", &merge_across_nodes);
 	SAFE_FILE_SCANF(NULL, PATH_KSM "sleep_millisecs",
 			"%d", &sleep_millisecs);
+
+	save_max_page_sharing();
 
 	tst_sig(FORK, DEF_HANDLER, cleanup);
 	TEST_PAUSE;
@@ -116,6 +118,8 @@ void cleanup(void)
 	FILE_PRINTF(PATH_KSM "sleep_millisecs",
 			 "%d", sleep_millisecs);
 	FILE_PRINTF(PATH_KSM "run", "%d", run);
+
+	restore_max_page_sharing();
 }
 
 static void usage(void)

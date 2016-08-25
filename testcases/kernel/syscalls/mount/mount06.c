@@ -129,7 +129,7 @@ static void setup(void)
 	if (!device)
 		tst_brkm(TCONF, cleanup, "Failed to obtain block device");
 
-	tst_mkfs(cleanup, device, fs_type, NULL);
+	tst_mkfs(cleanup, device, fs_type, NULL, NULL);
 
 	if (getcwd(path_name, sizeof(path_name)) == NULL)
 		tst_brkm(TBROK, cleanup, "getcwd failed");
@@ -161,7 +161,7 @@ static void cleanup(void)
 		tst_resm(TWARN | TERRNO, "umount(2) %s failed", path_name);
 
 	if (device)
-		tst_release_device(NULL, device);
+		tst_release_device(device);
 
 	tst_rmdir();
 }
