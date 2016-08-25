@@ -123,6 +123,12 @@ stress/mqueues/mqueues_multi_send_rev_1
 stress/mqueues/mqueues_multi_send_rev_2
 
 #
+# Other features not implemented on Linux
+#
+conformance/interfaces/pthread_rwlock_unlock/pthread_rwlock_unlock_4-1
+conformance/interfaces/pthread_rwlock_unlock/pthread_rwlock_unlock_4-2
+
+#
 # lx brand does not have proc_priocntl privilege
 #
 conformance/interfaces/fork/fork_17-1
@@ -136,12 +142,16 @@ conformance/interfaces/pthread_attr_setschedpolicy/pthread_attr_setschedpolicy_1
 conformance/interfaces/pthread_attr_setschedpolicy/pthread_attr_setschedpolicy_1-3
 conformance/interfaces/pthread_attr_setschedpolicy/pthread_attr_setschedpolicy_2-1
 conformance/interfaces/pthread_cancel/pthread_cancel_3-1
+conformance/interfaces/pthread_create/pthread_create_1-6
 conformance/interfaces/pthread_getschedparam/pthread_getschedparam_1-2
 conformance/interfaces/pthread_getschedparam/pthread_getschedparam_1-3
 conformance/interfaces/pthread_setschedprio/pthread_setschedprio_1-1
 conformance/interfaces/pthread_setschedparam/pthread_setschedparam_1-1
 conformance/interfaces/pthread_setschedparam/pthread_setschedparam_1-2
 conformance/interfaces/pthread_setschedparam/pthread_setschedparam_4-1
+conformance/interfaces/sched_rr_get_interval/sched_rr_get_interval_1-1
+conformance/interfaces/sched_rr_get_interval/sched_rr_get_interval_2-1
+conformance/interfaces/sched_rr_get_interval/sched_rr_get_interval_3-1
 conformance/interfaces/sched_setparam/sched_setparam_2-1
 conformance/interfaces/sched_setparam/sched_setparam_2-2
 conformance/interfaces/sched_setparam/sched_setparam_9-1
@@ -318,11 +328,11 @@ conformance/interfaces/mmap/mmap_11-4
 conformance/interfaces/pthread_once/pthread_once_3-1
 
 #
-# https://github.com/joyent/illumos-joyent/issues/67
-#
-conformance/interfaces/sched_rr_get_interval/sched_rr_get_interval_2-1
-
-#
 # https://github.com/joyent/illumos-joyent/issues/70
 #
 conformance/interfaces/sigaltstack/sigaltstack_2-1
+
+#
+# lx-brand doesn't implement clock_getcpudclockid(pid,...)
+#
+conformance/interfaces/pthread_condattr_setclock/pthread_condattr_setclock_1-3
