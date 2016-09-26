@@ -328,11 +328,6 @@ conformance/interfaces/mmap/mmap_11-4
 conformance/interfaces/pthread_once/pthread_once_3-1
 
 #
-# https://github.com/joyent/illumos-joyent/issues/70
-#
-conformance/interfaces/sigaltstack/sigaltstack_2-1
-
-#
 # lx-brand doesn't implement clock_getcpudclockid(pid,...)
 #
 conformance/interfaces/pthread_condattr_setclock/pthread_condattr_setclock_1-3
